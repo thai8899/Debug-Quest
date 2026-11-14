@@ -90,3 +90,8 @@ export function grade(quiz: Quiz, answers: unknown) {
   const correct = flags.filter(Boolean).length;
   return { correct, passed: correct >= quiz.passScore, flags };
 }
+
+// Call this from the scan pipeline right after bugs are saved, so quizzes are ready when the user opens them.
+export async function prepareQuizzes(bugs: Bug[]) {
+  await Promise.allSettled(bugs.map((b) => getOrMakeQuiz(b)));
+}

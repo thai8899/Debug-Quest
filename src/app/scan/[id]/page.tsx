@@ -45,7 +45,7 @@ export default function ScanPage() {
       <p className="mb-4 text-sm opacity-70">{scan.repoUrl.replace("https://github.com/", "")}</p>
       {scan.testsBefore && scan.testsAfter && (
         <div className="mb-4 rounded-xl border border-accent/40 bg-accent/10 p-4">
-          <span className="font-pixel text-xs text-accent">TESTS: {scan.testsBefore.fail} FAILING → {scan.testsAfter.fail} FAILING</span>
+          <span className="font-pixel text-xs text-accent">TESTS: {scan.testsBefore.fail} FAILING <span className="font-sans">→</span> {scan.testsAfter.fail} FAILING</span>
         </div>
       )}
       {scan.prUrl && (
@@ -53,7 +53,16 @@ export default function ScanPage() {
           <GitPullRequest size={16} /> Pull request on {scan.fixBranch} (main untouched)
         </a>
       )}
-      <h2 className="mb-4 font-pixel text-xs">{scan.bugs.length} BUGS FOUND · {locked} LOCKED</h2>
+      <h2 className="mb-2 font-pixel text-xs">{scan.bugs.length} BUGS FOUND · {locked} LOCKED</h2>
+      <div className="mb-4 h-2 w-full max-w-xs rounded-full bg-line">
+        <div className="h-full rounded-full bg-accent transition-all" style={{ width: `${scan.bugs.length ? ((scan.bugs.length - locked) / scan.bugs.length) * 100 : 0}%` }} />
+      </div>
+      {scan.bugs.length > 0 && locked === 0 && (
+        <div className="mb-4 rounded-xl border border-accent bg-accent/10 p-4 text-sm">
+          <b className="font-pixel text-[10px] text-accent">ALL FIXES EARNED</b>
+          <p className="mt-2">You understand every bug, so the pull request is ready to review and merge.</p>
+        </div>
+      )}
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
         {scan.bugs.map((b) => <LockedCard key={b.id} bug={b} />)}
       </div>

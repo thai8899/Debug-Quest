@@ -7,7 +7,7 @@ import type { Bug, PublicQuestion } from "@/lib/contract";
 import CodeBlock from "@/components/CodeBlock";
 import UnlockReveal from "@/components/UnlockReveal";
 
-type QuizData = { bugId: string; file: string; category: string; unlocked: boolean; bug?: Bug; passScore: number; questions: PublicQuestion[] };
+type QuizData = { bugId: string; scanId: string; file: string; category: string; unlocked: boolean; bug?: Bug; passScore: number; questions: PublicQuestion[] };
 type Review = { prompt: string; correct: boolean; whyCorrect: string };
 type Result =
   | { passed: true; xpEarned: number; correct: number; total: number; bug: Bug; review: Review[] }
@@ -55,11 +55,35 @@ export default function QuizPage() {
     if (j.hint) setHints({ ...hints, [step]: j.hint });
   }
 
+  useEffect(() => {
+    if (!quiz || result || quiz.unlocked) return;
+    const q = quiz.questions[step];
+    const onKey = (e: KeyboardEvent) => {
+      const n = parseInt(e.key, 10);
+      if (n >= 1 && n <= q.options.length) pick(n - 1);
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  });
+
   function retry() { setAnswers([]); setStep(0); setResult(null); setHints({}); startedAt.current = Date.now(); }
 
-  const back = <Link href="/scan/demo" className="mb-4 inline-flex items-center gap-1 text-sm opacity-70 hover:opacity-100"><ArrowLeft size={14} /> Back to bugs</Link>;
-  if (error) return <Page>{back}<p className="text-sev-high">{error}</p></Page>;
-  if (!quiz) return <Page><p className="font-pixel text-xs">LOADING QUIZ...</p></Page>;
+  const back = <Link href={`/scan/${quiz?.scanId ?? "demo"}`} className="mb-4 inline-flex items-center gap-1 text-sm opacity-70 hover:opacity-100"><ArrowLeft size={14} /> Back to bugs</Link>;
+  if (error)
+    return (
+      <Page>
+        {back}
+        <p className="text-sev-high">{error}</p>
+        <button onClick={() => location.reload()} className="mt-4 rounded-lg bg-accent px-4 py-2 font-pixel text-[10px] text-black">RETRY</button>
+      </Page>
+    );
+  if (!quiz)
+    return (
+      <Page>
+        <p className="font-pixel text-xs">WRITING YOUR QUIZ...</p>
+        <p className="mt-3 text-sm opacity-60">Gemini is building questions from your own code. This takes a few seconds.</p>
+      </Page>
+    );
 
   if (quiz.unlocked && quiz.bug) return <Page>{back}<UnlockReveal bug={quiz.bug} xp={0} /></Page>;
 
@@ -98,10 +122,10 @@ export default function QuizPage() {
       <h2 className="mb-4 text-lg font-semibold">{q.prompt}</h2>
 
       {q.type === "spot-the-line" ? (
-        <div className="overflow-hidden rounded-xl border border-line bg-[#10102a] font-mono text-sm">
+        <div className="overflow-x-auto rounded-xl border border-line bg-[#10102a] font-mono text-sm">
           {q.options.map((line, i) => (
             <button key={i} disabled={busy} onClick={() => pick(i)}
-              className="flex w-full gap-4 px-3 py-1.5 text-left hover:bg-accent/20">
+              className="flex w-full min-w-max gap-4 px-3 py-1.5 text-left hover:bg-accent/20">
               <span className="w-5 select-none text-right opacity-40">{i + 1}</span>
               <span className="whitespace-pre">{line || " "}</span>
             </button>

@@ -8,7 +8,7 @@ export async function GET(_: Request, { params }: { params: Promise<{ bugId: str
   try {
     const quiz = await getOrMakeQuiz(bug);
     return NextResponse.json({
-      bugId: bug.id, file: bug.file, category: bug.category, severity: bug.severity,
+      bugId: bug.id, scanId: bug.scanId, file: bug.file, category: bug.category, severity: bug.severity,
       unlocked: !bug.locked,
       bug: bug.locked ? undefined : bug, // unlocked bugs are no longer secret
       passScore: quiz.passScore,
