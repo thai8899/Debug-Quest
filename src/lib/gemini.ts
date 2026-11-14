@@ -22,7 +22,7 @@ For each bug return the smallest possible patch:
 Return at most 5 bugs. Return an empty list if the code is fine.`;
 
 export async function findBugs(files: { path: string; content: string }[], tests: TestResult): Promise<RawBug[]> {
-  const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
+  const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY, httpOptions: { apiVersion: "v1beta" } });
   const code = files.map((f) => `=== FILE: ${f.path} ===\n${f.content}`).join("\n\n");
   const testInfo = tests.ran ? `Test command: ${tests.command}\nFailing: ${tests.failing}\nOutput tail:\n${tests.output}` : "No tests detected.";
   const res = await ai.models.generateContent({

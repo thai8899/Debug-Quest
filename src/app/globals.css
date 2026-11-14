@@ -1,0 +1,19 @@
+@import "tailwindcss";
+
+@theme {
+  --color-bg: #0b0b1a;
+  --color-panel: #151530;
+  --color-line: #2a2a55;
+  --color-accent: #00e5a0;
+  --color-sev-high: #ff5d73;
+  --color-sev-medium: #ffb84d;
+  --color-sev-low: #5db3ff;
+  --font-pixel: "Press Start 2P", ui-monospace, monospace;
+}
+
+body {
+  background: var(--color-bg);
+  color: #e8e8f5;
+  font-family: Inter, system-ui, sans-serif;
+  margin: 0;
+}

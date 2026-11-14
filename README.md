@@ -19,3 +19,9 @@ Paste a GitHub repo. Gemini finds bugs, fixes them on a new branch (main is neve
 - [ ] Dashboard + locked tiles, deploy on Vultr
 
 Note: scans run the target repo's test suite on the server. Only scan repos you trust.
+
+## Unlock game (Phemmy's lane)
+- Demo without other lanes: `/scan/demo` (3 locked bugs), `/scan/demo-running` (loading state), then click a card.
+- Quiz grading is server-side only (`/api/quiz/[bugId]/answer`); the browser never gets answers.
+- Stand-ins to swap once teammates push: `src/lib/data.ts` -> Harshitha's `lib/mongo.ts`, `src/lib/xp.ts` -> `lib/tiger.ts`, `src/app/api/scan/[id]/route.ts` -> Punarva's real route.
+- Punarva: call `prepareQuizzes(bugs)` from `src/lib/quiz.ts` after saving a scan's bugs so quizzes are ready.
