@@ -7,7 +7,7 @@ const SEV = { high: "bg-sev-high text-sev-high", medium: "bg-sev-medium text-sev
 export default function LockedCard({ bug }: { bug: PublicBug }) {
   const open = !bug.locked;
   return (
-    <div className="relative flex flex-col gap-3 overflow-hidden rounded-md border border-line bg-panel p-4 pl-5">
+    <div className="slab relative flex flex-col gap-3 overflow-hidden rounded-md border border-line bg-panel p-4 pl-5 transition-transform hover:-translate-y-1">
       <span className={`absolute inset-y-0 left-0 w-1 ${SEV[bug.severity].split(" ")[0]}`} />
       <div className="flex items-center justify-between">
         {open ? <LockOpen className="text-ok" size={20} /> : <Lock className="text-accent" size={20} />}

@@ -1,21 +1,21 @@
 @import "tailwindcss";
 
 @theme {
-  --color-bg: #070b16;
-  --color-panel: rgb(16 24 48 / 0.78);
-  --color-line: rgb(237 232 220 / 0.12);
-  --color-accent: #d6b25e;
-  --color-ok: #4fd1c5;
-  --color-sev-high: #ff5a36;
-  --color-sev-medium: #f0a04b;
-  --color-sev-low: #6ea8ff;
+  --color-bg: #121a52;
+  --color-panel: rgb(38 54 128 / 0.72);
+  --color-line: rgb(255 255 255 / 0.18);
+  --color-accent: #ffc94d;
+  --color-ok: #38e8c6;
+  --color-sev-high: #ff6b4a;
+  --color-sev-medium: #ffb84d;
+  --color-sev-low: #7cb7ff;
   --font-display: "Chakra Petch", ui-sans-serif, system-ui, sans-serif;
   --font-sans: "IBM Plex Sans", ui-sans-serif, system-ui, sans-serif;
 }
 
 body {
   background: var(--color-bg);
-  color: #ede8dc;
+  color: #f7f3e8;
   font-family: var(--font-sans);
   margin: 0;
 }
@@ -31,8 +31,8 @@ body {
 /* Backdrop: perspective floor grid + one slow scan line */
 .grid-floor {
   background-image:
-    linear-gradient(rgba(214, 178, 94, 0.16) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(214, 178, 94, 0.16) 1px, transparent 1px);
+    linear-gradient(rgba(255, 201, 77, 0.24) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255, 201, 77, 0.24) 1px, transparent 1px);
   background-size: 64px 64px;
   transform: perspective(520px) rotateX(62deg);
   transform-origin: 50% 100%;
@@ -56,7 +56,7 @@ body {
   -webkit-mask-image: radial-gradient(ellipse at 50% 35%, #000 0%, rgba(0,0,0,.55) 60%, transparent 100%);
   mask-image: radial-gradient(ellipse at 50% 35%, #000 0%, rgba(0,0,0,.55) 60%, transparent 100%);
 }
-.ghost-wrap { opacity: .11; filter: blur(.4px); }
+.ghost-wrap { opacity: .08; filter: blur(.4px); }
 .ghost { padding: 0 28px; }
 .ghost-l { -webkit-mask-image: linear-gradient(90deg,#000 0%,#000 35%,transparent 100%); mask-image: linear-gradient(90deg,#000 0%,#000 35%,transparent 100%); animation: drift 140s linear infinite; }
 .ghost-r { -webkit-mask-image: linear-gradient(270deg,#000 0%,#000 35%,transparent 100%); mask-image: linear-gradient(270deg,#000 0%,#000 35%,transparent 100%); animation: drift 170s linear infinite reverse; }
@@ -78,3 +78,26 @@ body {
 .bot-wiggle { animation: wiggle 0.5s ease-in-out infinite alternate; }
 @keyframes wiggle { from { transform: rotate(-6deg); } to { transform: rotate(6deg); } }
 @media (prefers-reduced-motion: reduce) { .path-flow, .bot-wiggle { animation: none; } }
+
+/* ---- 3D ---- */
+.stage { perspective: 1300px; perspective-origin: 50% 0%; }
+.plane { transform-style: preserve-3d; transform-origin: 50% 100%; transform: rotateX(var(--tilt, 20deg)); transition: transform .5s ease; }
+.slab {
+  --d: #0f1a5c;
+  box-shadow: 0 1px 0 var(--d), 0 2px 0 var(--d), 0 3px 0 var(--d), 0 4px 0 var(--d), 0 5px 0 var(--d), 0 6px 0 var(--d), 0 7px 0 var(--d), 0 8px 0 var(--d),
+    0 20px 26px rgba(3, 8, 40, .55), inset 0 1px 0 rgba(255, 255, 255, .28);
+}
+.slab:hover { filter: brightness(1.1); }
+.keycap { box-shadow: 0 4px 0 color-mix(in srgb, var(--c) 45%, #050a30), 0 9px 14px rgba(3, 8, 40, .4), inset 0 1px 0 rgba(255, 255, 255, .22); transition: transform .08s, box-shadow .08s; }
+.keycap:active:not(:disabled) { transform: translateY(3px); box-shadow: 0 1px 0 color-mix(in srgb, var(--c) 45%, #050a30), 0 3px 6px rgba(3, 8, 40, .4); }
+.btn3d { background: linear-gradient(180deg, #ffe08a, #ffbf3a); box-shadow: 0 5px 0 #a8701a, 0 11px 18px rgba(3, 8, 40, .4), inset 0 1px 0 rgba(255, 255, 255, .6); transition: transform .08s, box-shadow .08s, filter .15s; }
+.btn3d:hover:not(:disabled) { filter: brightness(1.06); }
+.btn3d:active:not(:disabled) { transform: translateY(4px); box-shadow: 0 1px 0 #a8701a, 0 3px 8px rgba(3, 8, 40, .4); }
+.cube-scene { perspective: 900px; }
+.cube { transform-style: preserve-3d; animation: spin3d 28s linear infinite; }
+.cube > i { position: absolute; inset: 0; display: block; backface-visibility: visible; }
+@keyframes spin3d { from { transform: rotateX(-26deg) rotateY(0deg); } to { transform: rotateX(-26deg) rotateY(360deg); } }
+.bob { animation: bob 7s ease-in-out infinite alternate; }
+@keyframes bob { from { transform: translateY(-14px); } to { transform: translateY(14px); } }
+@media (prefers-reduced-motion: reduce) { .cube, .bob { animation: none; } .plane { transition: none; } }
+@media (max-width: 719px) { .plane { --tilt: 10deg; } }

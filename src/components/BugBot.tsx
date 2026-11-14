@@ -8,7 +8,8 @@ export default function BugBot({ size = 56, state = "idle" }: { size?: number; s
         <path d="M18 24 L8 16 M18 34 L6 34 M18 44 L8 52 M46 24 L56 16 M46 34 L58 34 M46 44 L56 52" />
         <path d="M27 14 L22 6 M37 14 L42 6" />
       </g>
-      <path d="M32 10 L48 19 L48 45 L32 56 L16 45 L16 19 Z" fill="#0b1226" stroke={body} strokeWidth="2.5" strokeLinejoin="round" />
+      <defs><linearGradient id="bbBody" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stopColor="#5b4bb5" /><stop offset="1" stopColor="#1a1f5c" /></linearGradient></defs>
+      <path d="M32 10 L48 19 L48 45 L32 56 L16 45 L16 19 Z" fill="url(#bbBody)" stroke={body} strokeWidth="2.5" strokeLinejoin="round" />
       <path d="M32 10 L32 56 M16 19 L48 45 M48 19 L16 45" stroke={body} strokeOpacity=".28" strokeWidth="1.4" />
       <path d="M32 18 L42 24 L42 40 L32 46 L22 40 L22 24 Z" fill={state === "caught" ? "#4FD1C5" : "#F472B6"} fillOpacity=".3" stroke={body} strokeOpacity=".6" strokeWidth="1.2" />
       <circle cx="26" cy="22" r="3.2" fill={state === "caught" ? "#fff" : "#FFD23F"} /><circle cx="38" cy="22" r="3.2" fill={state === "caught" ? "#fff" : "#FFD23F"} />

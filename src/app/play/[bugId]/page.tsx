@@ -17,7 +17,7 @@ type Win = Extract<RunResult, { passed: true }> & { bug: Bug };
 type Fail = Extract<RunResult, { passed: false }>;
 const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
 const IDLE: BoardState = { cell: 0, caught: [], crashed: null, done: false };
-const btn = "inline-flex items-center justify-center gap-2 rounded-sm bg-accent px-5 py-3 font-display text-sm font-semibold text-[#1a1203] hover:brightness-110 disabled:cursor-not-allowed disabled:opacity-40";
+const btn = "btn3d inline-flex items-center justify-center gap-2 rounded-md px-5 py-3 font-display text-sm font-bold text-[#2a1a00] disabled:cursor-not-allowed disabled:opacity-40";
 
 export default function PlayPage() {
   const { bugId } = useParams<{ bugId: string }>();
@@ -151,8 +151,8 @@ export default function PlayPage() {
                 const on = selected === g.id;
                 return (
                   <button key={g.id} role="radio" aria-checked={on} disabled={phase !== "setup"} onClick={() => setSelected(on ? null : g.id)}
-                    style={{ borderColor: on ? GUARD_COLOR[g.id] : `${GUARD_COLOR[g.id]}55`, background: on ? `${GUARD_COLOR[g.id]}22` : `${GUARD_COLOR[g.id]}0d` }}
-                    className="flex shrink-0 items-center gap-2 rounded-sm border p-2 text-left transition-colors hover:brightness-125 disabled:opacity-60">
+                    style={{ ["--c" as string]: GUARD_COLOR[g.id], borderColor: GUARD_COLOR[g.id], background: on ? `linear-gradient(180deg, ${GUARD_COLOR[g.id]}55, ${GUARD_COLOR[g.id]}22)` : `linear-gradient(180deg, ${GUARD_COLOR[g.id]}26, ${GUARD_COLOR[g.id]}0f)` }}
+                    className="keycap flex shrink-0 items-center gap-2 rounded-md border p-2 text-left hover:brightness-125 disabled:opacity-60">
                     <GuardIcon id={g.id} />
                     <span className="whitespace-nowrap text-sm font-medium lg:flex-1">{g.name}</span>
                     <span className="font-mono text-xs text-[#ede8dc]/55">${g.cost}</span>

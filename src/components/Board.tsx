@@ -38,7 +38,7 @@ export default function Board({ stations, placements, selected, state, onSocket 
 
   return (
     <div className={`ticks relative rounded-md border bg-panel p-3 pt-8 transition-colors duration-300 ${state.crashed ? "border-sev-high/70" : state.done ? "border-ok/60" : "border-line"}`} style={{ height: rows * CELL + 56 }}>
-      <div className="relative h-full w-full">
+      <div className="stage h-full w-full"><div className="plane relative h-full w-full">
         <svg className="absolute inset-0 h-full w-full" viewBox={`0 0 ${cols * 100} ${rows * 100}`} preserveAspectRatio="none" aria-hidden>
           <defs><linearGradient id="trk" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stopColor="#4FD1C5" /><stop offset=".5" stopColor="#A78BFA" /><stop offset="1" stopColor="#F472B6" /></linearGradient></defs>
           <polyline points={points.map((p) => `${p.x * cols * 100},${p.y * rows * 100}`).join(" ")} fill="none"
@@ -50,12 +50,13 @@ export default function Board({ stations, placements, selected, state, onSocket 
             const place = { gridColumn: p.col + 1, gridRow: p.row + 1 };
             if (i === 0) return (
               <div key="start" style={place} className="flex items-center justify-center">
-                <div className="mt-10 flex flex-col items-center gap-1 text-[#6EE7A0]"><Play size={20} /><span className="font-mono text-xs">start</span></div>
+                <div className="slab mt-10 flex flex-col items-center gap-1 rounded-md border border-[#6EE7A0]/60 px-4 py-2 text-[#6EE7A0]" style={{ translate: "0 0 10px", background: "linear-gradient(160deg,#1d6f6a,#14464f)", ["--d" as string]: "#082b33" }}><Play size={20} /><span className="font-mono text-xs">start</span></div>
               </div>
             );
             if (i === total - 1) return (
               <div key="exit" style={place} className="flex items-center justify-center">
-                <div className={`mt-8 flex flex-col items-center gap-1 rounded-md border px-4 py-3 transition-colors ${state.done ? "border-ok bg-ok/10 text-ok" : "border-accent/70 bg-accent/10 text-accent shadow-[0_0_24px_rgba(214,178,94,.25)]"}`}>
+                <div className={`slab mt-8 flex flex-col items-center gap-1 rounded-md border px-4 py-3 transition-colors ${state.done ? "border-ok text-ok" : "border-accent text-accent"}`}
+                  style={{ translate: "0 0 22px", background: state.done ? "linear-gradient(160deg,#1a8a86,#0e5662)" : "linear-gradient(160deg,#7a5a14,#4d380b)", ["--d" as string]: state.done ? "#06323a" : "#2c1f04" }}>
                   <Flag size={20} /><span className="font-mono text-xs">{state.done ? "contained" : "exit"}</span>
                 </div>
               </div>
@@ -67,8 +68,13 @@ export default function Board({ stations, placements, selected, state, onSocket 
             return (
               <div key={s.id} style={place} className="flex items-center justify-center p-2">
                 <motion.div animate={crashed ? { x: [0, -8, 8, -6, 6, 0] } : { x: 0 }} transition={{ duration: 0.45 }}
-                  className={`relative flex h-full w-full max-w-[210px] flex-col justify-between rounded-md border p-2 transition-colors ${
-                    crashed ? "border-sev-high bg-[#2a1520]" : caught ? "border-ok bg-[#0c2a30]" : "border-line bg-[#0c1428]"}`}>
+                  style={{
+                    translate: "0 0 16px",
+                    background: crashed ? "linear-gradient(160deg,#8a2c52,#541a3a)" : caught ? "linear-gradient(160deg,#1a8a86,#0e5662)" : "linear-gradient(160deg,#3249a8,#22328a)",
+                    ["--d" as string]: crashed ? "#2e0c22" : caught ? "#06323a" : "#0f1a5c",
+                  }}
+                  className={`slab relative flex h-full w-full max-w-[210px] flex-col justify-between rounded-md border p-2 transition-colors ${
+                    crashed ? "border-sev-high" : caught ? "border-ok" : "border-white/25"}`}>
                   {crashed && [0, 0.18].map((d) => (
                     <motion.span key={d} aria-hidden className="pointer-events-none absolute inset-0 rounded-md border-2 border-sev-high"
                       initial={{ opacity: 0.95, scale: 1 }} animate={{ opacity: 0, scale: 1.5 }} transition={{ duration: 0.8, delay: d, ease: "easeOut" }} />
@@ -82,16 +88,16 @@ export default function Board({ stations, placements, selected, state, onSocket 
                       initial={{ opacity: 0.9, scale: 1 }} animate={{ opacity: 0, scale: 3.2 }} transition={{ duration: 0.9, ease: "easeOut" }} />
                   )}
                   <span aria-hidden className="absolute inset-x-0 top-0 h-1 rounded-t-md" style={{ background: crashed ? "#FF5A36" : caught ? "#4FD1C5" : TILE[(i - 1) % TILE.length] }} />
-                  <div className="flex items-center justify-between font-mono text-[11px] text-[#ede8dc]/55">
+                  <div className="flex items-center justify-between font-mono text-[11px] text-[#f7f3e8]/70">
                     <span>line {s.line}</span>
                     {crashed && <Flame size={14} className="text-sev-high" />}
                   </div>
-                  <Highlighter language="typescript" style={oneDark} PreTag="div" codeTagProps={{ style: { background: "transparent", fontSize: 11.5, whiteSpace: "pre-wrap", wordBreak: "break-word" } }}
-                    customStyle={{ background: "transparent", margin: 0, padding: 0, whiteSpace: "pre-wrap", wordBreak: "break-word", overflow: "hidden", maxHeight: "3.9em", lineHeight: 1.3 }}>{s.code}</Highlighter>
+                  <Highlighter language="typescript" style={oneDark} PreTag="div" codeTagProps={{ style: { background: "transparent", fontSize: 12.5, whiteSpace: "pre-wrap", wordBreak: "break-word" } }}
+                    customStyle={{ background: "transparent", margin: 0, padding: 0, whiteSpace: "pre-wrap", wordBreak: "break-word", overflow: "hidden", maxHeight: "4.2em", lineHeight: 1.3 }}>{s.code}</Highlighter>
                   <button type="button" onClick={() => onSocket(s.id)} aria-label={g ? `Remove guard from line ${s.line}` : `Attach guard to line ${s.line}`}
-                    className={`socket mx-auto flex h-9 w-9 items-center justify-center transition-transform hover:scale-110 focus-visible:scale-110 ${
+                    className={`socket mx-auto flex h-9 w-9 drop-shadow-[0_4px_0_rgba(4,8,40,.6)] items-center justify-center transition-transform hover:scale-110 focus-visible:scale-110 ${
                       g ? "text-[#0a0f1e]" : selected ? "animate-pulse" : "bg-white/10 text-[#ede8dc]/50"}`}
-                    style={g ? { background: caught ? "#4FD1C5" : GUARD_COLOR[g] } : selected ? { background: `${GUARD_COLOR[selected]}33`, color: GUARD_COLOR[selected] } : undefined}>
+                    style={g ? { background: `linear-gradient(160deg, #fff8 -20%, ${caught ? "#38E8C6" : GUARD_COLOR[g]} 45%)` } : selected ? { background: `${GUARD_COLOR[selected]}33`, color: GUARD_COLOR[selected] } : undefined}>
                     {g ? <GuardIcon id={g} size={17} className="text-[#0a0f1e]" /> : <Plus size={16} />}
                   </button>
                 </motion.div>
@@ -102,10 +108,13 @@ export default function Board({ stations, placements, selected, state, onSocket 
         <motion.div className="pointer-events-none absolute z-10" initial={false}
           animate={{ left: `${bot.x * 100}%`, top: `${bot.y * 100}%`, opacity: state.crashed ? 0 : 1, scale: state.crashed ? 1.8 : 1 }}
           transition={{ left: { duration: 0.55, ease: "easeInOut" }, top: { duration: 0.55, ease: "easeInOut" }, opacity: { duration: 0.35 }, scale: { duration: 0.35 } }}
-          style={{ translate: "-50% -50%" }}>
-          <BugBot size={46} state={state.done ? "caught" : "idle"} />
+          style={{ translate: "-50% -50%", transformStyle: "preserve-3d" }}>
+          <div className="relative" style={{ transform: "rotateX(calc(var(--tilt, 20deg) * -1)) translateZ(34px) translateY(-8px)", transformOrigin: "50% 100%" }}>
+            <span aria-hidden className="absolute left-1/2 top-[86%] h-3 w-9 -translate-x-1/2 rounded-full bg-black/55 blur-[3px]" />
+            <BugBot size={50} state={state.done ? "caught" : "idle"} />
+          </div>
         </motion.div>
-      </div>
+      </div></div>
     </div>
   );
 }
