@@ -6,7 +6,7 @@ import { ArrowLeft, Lightbulb, Play, RotateCcw, Star } from "lucide-react";
 import type { Bug } from "@/lib/contract";
 import type { GuardDef, GuardId, PublicLevel, RunResult } from "@/lib/levelTypes";
 import Board, { type BoardState } from "@/components/Board";
-import GuardIcon from "@/components/GuardIcon";
+import GuardIcon, { GUARD_COLOR } from "@/components/GuardIcon";
 import UnlockReveal from "@/components/UnlockReveal";
 import Mascot from "@/components/Mascot";
 import SpeechBubble from "@/components/SpeechBubble";
@@ -151,8 +151,9 @@ export default function PlayPage() {
                 const on = selected === g.id;
                 return (
                   <button key={g.id} role="radio" aria-checked={on} disabled={phase !== "setup"} onClick={() => setSelected(on ? null : g.id)}
-                    className={`flex shrink-0 items-center gap-2 rounded-sm border p-2 text-left transition-colors disabled:opacity-60 ${on ? "border-accent bg-accent/10" : "border-line hover:border-accent/50"}`}>
-                    <GuardIcon id={g.id} className={on ? "text-accent" : "text-[#ede8dc]/70"} />
+                    style={{ borderColor: on ? GUARD_COLOR[g.id] : `${GUARD_COLOR[g.id]}55`, background: on ? `${GUARD_COLOR[g.id]}22` : `${GUARD_COLOR[g.id]}0d` }}
+                    className="flex shrink-0 items-center gap-2 rounded-sm border p-2 text-left transition-colors hover:brightness-125 disabled:opacity-60">
+                    <GuardIcon id={g.id} />
                     <span className="whitespace-nowrap text-sm font-medium lg:flex-1">{g.name}</span>
                     <span className="font-mono text-xs text-[#ede8dc]/55">${g.cost}</span>
                     <kbd className="hidden rounded-sm border border-line px-1.5 font-mono text-[10px] text-[#ede8dc]/45 lg:inline">{i + 1}</kbd>

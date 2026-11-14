@@ -10,8 +10,8 @@ export default function BugBot({ size = 56, state = "idle" }: { size?: number; s
       </g>
       <path d="M32 10 L48 19 L48 45 L32 56 L16 45 L16 19 Z" fill="#0b1226" stroke={body} strokeWidth="2.5" strokeLinejoin="round" />
       <path d="M32 10 L32 56 M16 19 L48 45 M48 19 L16 45" stroke={body} strokeOpacity=".28" strokeWidth="1.4" />
-      <path d="M32 18 L42 24 L42 40 L32 46 L22 40 L22 24 Z" fill={body} fillOpacity=".16" stroke={body} strokeOpacity=".6" strokeWidth="1.2" />
-      <circle cx="26" cy="22" r="3" fill={body} /><circle cx="38" cy="22" r="3" fill={body} />
+      <path d="M32 18 L42 24 L42 40 L32 46 L22 40 L22 24 Z" fill={state === "caught" ? "#4FD1C5" : "#F472B6"} fillOpacity=".3" stroke={body} strokeOpacity=".6" strokeWidth="1.2" />
+      <circle cx="26" cy="22" r="3.2" fill={state === "caught" ? "#fff" : "#FFD23F"} /><circle cx="38" cy="22" r="3.2" fill={state === "caught" ? "#fff" : "#FFD23F"} />
       <circle cx="26" cy="22" r="1.1" fill="#070b16" /><circle cx="38" cy="22" r="1.1" fill="#070b16" />
     </svg>
   );

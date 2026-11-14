@@ -3,7 +3,9 @@ import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import { Flag, Flame, Plus, Play, Zap } from "lucide-react";
 import type { GuardId } from "@/lib/levelTypes";
-import GuardIcon from "./GuardIcon";
+import { Prism as Highlighter } from "react-syntax-highlighter";
+import { oneDark } from "react-syntax-highlighter/dist/esm/styles/prism";
+import GuardIcon, { GUARD_COLOR } from "./GuardIcon";
 import BugBot from "./BugBot";
 
 export type BoardStation = { id: string; line: number; code: string };
@@ -21,6 +23,8 @@ function useCols() {
 // Cells run in a snake: left to right, then right to left. Cell 0 is START, the last is EXIT.
 const pos = (i: number, cols: number) => { const row = Math.floor(i / cols); const c = i % cols; return { row, col: row % 2 === 0 ? c : cols - 1 - c }; };
 
+const TILE = ["#4FD1C5", "#6EA8FF", "#A78BFA", "#F472B6", "#F5A524", "#6EE7A0"];
+
 export default function Board({ stations, placements, selected, state, onSocket }: {
   stations: BoardStation[]; placements: Record<string, GuardId>; selected: GuardId | null; state: BoardState; onSocket: (id: string) => void;
 }) {
@@ -36,8 +40,9 @@ export default function Board({ stations, placements, selected, state, onSocket 
     <div className={`ticks relative rounded-md border bg-panel p-3 pt-8 transition-colors duration-300 ${state.crashed ? "border-sev-high/70" : state.done ? "border-ok/60" : "border-line"}`} style={{ height: rows * CELL + 56 }}>
       <div className="relative h-full w-full">
         <svg className="absolute inset-0 h-full w-full" viewBox={`0 0 ${cols * 100} ${rows * 100}`} preserveAspectRatio="none" aria-hidden>
+          <defs><linearGradient id="trk" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stopColor="#4FD1C5" /><stop offset=".5" stopColor="#A78BFA" /><stop offset="1" stopColor="#F472B6" /></linearGradient></defs>
           <polyline points={points.map((p) => `${p.x * cols * 100},${p.y * rows * 100}`).join(" ")} fill="none"
-            stroke="#D6B25E" strokeOpacity=".5" strokeWidth="2" strokeDasharray="4 7" vectorEffect="non-scaling-stroke" className="path-flow" />
+            stroke="url(#trk)" strokeOpacity=".85" strokeWidth="2.5" strokeDasharray="4 7" vectorEffect="non-scaling-stroke" className="path-flow" />
         </svg>
         <div className="absolute inset-0 grid" style={{ gridTemplateColumns: `repeat(${cols}, 1fr)`, gridTemplateRows: `repeat(${rows}, 1fr)` }}>
           {Array.from({ length: total }, (_, i) => {
@@ -45,12 +50,12 @@ export default function Board({ stations, placements, selected, state, onSocket 
             const place = { gridColumn: p.col + 1, gridRow: p.row + 1 };
             if (i === 0) return (
               <div key="start" style={place} className="flex items-center justify-center">
-                <div className="mt-10 flex flex-col items-center gap-1 text-accent"><Play size={20} /><span className="font-mono text-xs">start</span></div>
+                <div className="mt-10 flex flex-col items-center gap-1 text-[#6EE7A0]"><Play size={20} /><span className="font-mono text-xs">start</span></div>
               </div>
             );
             if (i === total - 1) return (
               <div key="exit" style={place} className="flex items-center justify-center">
-                <div className={`mt-8 flex flex-col items-center gap-1 rounded-md border px-4 py-3 transition-colors ${state.done ? "border-ok bg-ok/10 text-ok" : "border-accent/40 text-accent/80"}`}>
+                <div className={`mt-8 flex flex-col items-center gap-1 rounded-md border px-4 py-3 transition-colors ${state.done ? "border-ok bg-ok/10 text-ok" : "border-accent/70 bg-accent/10 text-accent shadow-[0_0_24px_rgba(214,178,94,.25)]"}`}>
                   <Flag size={20} /><span className="font-mono text-xs">{state.done ? "contained" : "exit"}</span>
                 </div>
               </div>
@@ -76,15 +81,18 @@ export default function Board({ stations, placements, selected, state, onSocket 
                     <motion.span aria-hidden className="pointer-events-none absolute bottom-2 left-1/2 h-9 w-9 rounded-full border-2 border-ok" style={{ translate: "-50% 0" }}
                       initial={{ opacity: 0.9, scale: 1 }} animate={{ opacity: 0, scale: 3.2 }} transition={{ duration: 0.9, ease: "easeOut" }} />
                   )}
-                  <div className="flex items-center justify-between font-mono text-[11px] text-[#ede8dc]/45">
+                  <span aria-hidden className="absolute inset-x-0 top-0 h-1 rounded-t-md" style={{ background: crashed ? "#FF5A36" : caught ? "#4FD1C5" : TILE[(i - 1) % TILE.length] }} />
+                  <div className="flex items-center justify-between font-mono text-[11px] text-[#ede8dc]/55">
                     <span>line {s.line}</span>
                     {crashed && <Flame size={14} className="text-sev-high" />}
                   </div>
-                  <code className="line-clamp-3 break-words font-mono text-[11.5px] leading-snug text-[#ede8dc]/90">{s.code}</code>
+                  <Highlighter language="typescript" style={oneDark} PreTag="div" codeTagProps={{ style: { background: "transparent", fontSize: 11.5, whiteSpace: "pre-wrap", wordBreak: "break-word" } }}
+                    customStyle={{ background: "transparent", margin: 0, padding: 0, whiteSpace: "pre-wrap", wordBreak: "break-word", overflow: "hidden", maxHeight: "3.9em", lineHeight: 1.3 }}>{s.code}</Highlighter>
                   <button type="button" onClick={() => onSocket(s.id)} aria-label={g ? `Remove guard from line ${s.line}` : `Attach guard to line ${s.line}`}
                     className={`socket mx-auto flex h-9 w-9 items-center justify-center transition-transform hover:scale-110 focus-visible:scale-110 ${
-                      g ? (caught ? "bg-ok text-[#04201d]" : "bg-accent text-[#1a1203]") : selected ? "bg-accent/25 text-accent animate-pulse" : "bg-white/10 text-[#ede8dc]/50"}`}>
-                    {g ? <GuardIcon id={g} size={17} /> : <Plus size={16} />}
+                      g ? "text-[#0a0f1e]" : selected ? "animate-pulse" : "bg-white/10 text-[#ede8dc]/50"}`}
+                    style={g ? { background: caught ? "#4FD1C5" : GUARD_COLOR[g] } : selected ? { background: `${GUARD_COLOR[selected]}33`, color: GUARD_COLOR[selected] } : undefined}>
+                    {g ? <GuardIcon id={g} size={17} className="text-[#0a0f1e]" /> : <Plus size={16} />}
                   </button>
                 </motion.div>
               </div>

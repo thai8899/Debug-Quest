@@ -55,10 +55,11 @@ export default function Backdrop() {
     <div aria-hidden className="pointer-events-none fixed inset-0 z-0 overflow-hidden bg-[#070b16]">
       {/* aurora glows */}
       <div className="absolute inset-0" style={{ background:
-        "radial-gradient(900px 560px at 12% -6%, rgba(214,178,94,.20), transparent 62%)," +
-        "radial-gradient(820px 620px at 96% 18%, rgba(79,209,197,.11), transparent 64%)," +
-        "radial-gradient(900px 700px at 70% 112%, rgba(110,168,255,.13), transparent 62%)," +
-        "radial-gradient(700px 480px at 4% 96%, rgba(255,90,54,.07), transparent 65%)," +
+        "radial-gradient(900px 560px at 12% -6%, rgba(214,178,94,.22), transparent 62%)," +
+        "radial-gradient(700px 520px at 48% 6%, rgba(139,92,246,.20), transparent 64%)," +
+        "radial-gradient(820px 620px at 96% 18%, rgba(79,209,197,.16), transparent 64%)," +
+        "radial-gradient(900px 700px at 70% 112%, rgba(110,168,255,.18), transparent 62%)," +
+        "radial-gradient(700px 480px at 4% 96%, rgba(244,114,182,.13), transparent 65%)," +
         "linear-gradient(180deg,#070b16 0%,#0a1124 55%,#0e1833 100%)" }} />
       {/* blueprint grid, fine + major */}
       <div className="blueprint absolute inset-0" />
