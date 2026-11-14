@@ -1,14 +1,16 @@
 import type { Bug, Quiz, PublicBug, Scan } from "./contract";
 import { DEMO_BUGS, demoScan } from "./demo";
-import { mongoEnabled, mGetBug, mGetBugsForScan, mSaveBugs, mUnlockBug, mGetQuiz, mSaveQuiz } from "./mongo-adapter";
+import type { Level } from "./levelTypes";
+import { mongoEnabled, mGetLevel, mSaveLevel, mGetBug, mGetBugsForScan, mSaveBugs, mUnlockBug, mGetQuiz, mSaveQuiz } from "./mongo-adapter";
 
 // In-memory stand-in for Harshitha's lib/mongo.ts (getBugsForScan, unlockBug, saveQuiz, getQuiz).
 // Swap the bodies below for Mongo calls; the signatures stay the same.
-type Mem = { bugs: Map<string, Bug>; quizzes: Map<string, Quiz>; started: Map<string, number> };
+type Mem = { bugs: Map<string, Bug>; quizzes: Map<string, Quiz>; levels: Map<string, Level>; started: Map<string, number> };
 const g = globalThis as unknown as { __dq?: Mem };
 const mem: Mem = (g.__dq ??= {
   bugs: new Map(DEMO_BUGS.map((b) => [b.id, { ...b }])),
   quizzes: new Map(),
+  levels: new Map(),
   started: new Map(),
 });
 
@@ -31,9 +33,12 @@ export async function unlockBug(id: string) {
 }
 export async function getQuiz(bugId: string) { return useMongo(bugId) ? mGetQuiz(bugId) : mem.quizzes.get(bugId) ?? null; }
 export async function saveQuiz(quiz: Quiz) { if (useMongo(quiz.bugId)) await mSaveQuiz(quiz); else mem.quizzes.set(quiz.bugId, quiz); }
+export async function getLevel(bugId: string) { return useMongo(bugId) ? mGetLevel(bugId) : mem.levels.get(bugId) ?? null; }
+export async function saveLevel(l: Level) { if (useMongo(l.bugId)) await mSaveLevel(l); else mem.levels.set(l.bugId, l); }
 export async function resetDemo() {
   mem.bugs = new Map(DEMO_BUGS.map((b) => [b.id, { ...b }]));
   mem.quizzes.clear();
+  mem.levels.clear();
 }
 
 // Locked bugs must never carry the fix or explanations to the browser.

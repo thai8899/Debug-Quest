@@ -20,7 +20,7 @@ export default function UnlockReveal({ bug, xp }: { bug: Bug; xp: number }) {
             animate={{ scale: 3.2, opacity: 0 }} transition={{ duration: 1.4, delay: d, ease: "easeOut" }} />
         ))}
         <Mascot size={96} mood={open ? "happy" : "idle"} />
-        <div className="font-display text-2xl font-bold">{open ? "Fix unlocked" : "Checking answers"}</div>
+        <div className="font-display text-2xl font-bold">{open ? "Fix unlocked" : "Containing the bug"}</div>
         {open && xp > 0 && (
           <motion.div initial={{ y: 10, opacity: 0 }} animate={{ y: 0, opacity: 1 }} className="font-mono text-ok">+{xp} XP</motion.div>
         )}

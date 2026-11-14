@@ -70,3 +70,11 @@ body {
 }
 @media (prefers-reduced-motion: reduce) { .ghost-l, .ghost-r, .rings, .sweep { animation: none; } }
 @media (max-width: 640px) { .ghost-wrap { opacity: .07; } }
+
+/* ---- game board ---- */
+.socket { clip-path: polygon(50% 0, 93% 25%, 93% 75%, 50% 100%, 7% 75%, 7% 25%); }
+.path-flow { animation: pathflow 1.6s linear infinite; }
+@keyframes pathflow { to { stroke-dashoffset: -22; } }
+.bot-wiggle { animation: wiggle 0.5s ease-in-out infinite alternate; }
+@keyframes wiggle { from { transform: rotate(-6deg); } to { transform: rotate(6deg); } }
+@media (prefers-reduced-motion: reduce) { .path-flow, .bot-wiggle { animation: none; } }

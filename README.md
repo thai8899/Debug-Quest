@@ -25,3 +25,12 @@ Note: scans run the target repo's test suite on the server. Only scan repos you 
 - Quiz grading is server-side only (`/api/quiz/[bugId]/answer`); the browser never gets answers.
 - Stand-ins to swap once teammates push: `src/lib/data.ts` -> Harshitha's `lib/mongo.ts`, `src/lib/xp.ts` -> `lib/tiger.ts`, `src/app/api/scan/[id]/route.ts` -> Punarva's real route.
 - Punarva: call `prepareQuizzes(bugs)` from `src/lib/quiz.ts` after saving a scan's bugs so quizzes are ready.
+
+## Unlock game: "Trap the bug" (Phemmy's lane)
+
+Replaces the quiz as the main unlock flow (the old `/quiz/[bugId]` screen and `/api/quiz/*` routes still work).
+
+- Page: `/play/[bugId]`. The bug-bot walks the buggy code line by line; the player spends a budget attaching guards to lines; the server runs the test.
+- `GET /api/game/[bugId]` returns the board (symptom, budget, guard tools, code lines). It never contains the answers.
+- `POST /api/game/[bugId]/run` with `{ placements: { [stationId]: guardId }, secondsToSolve }`. Server simulates the run and grades it. Fail returns only where the bug-bot crashed (and a hint after the 2nd fail). Pass unlocks the bug, records `quiz_pass` XP (50 / 70 / 90 for 1 / 2 / 3 stars) and returns the unlocked bug.
+- Levels are generated from the bug (Gemini, validated) with a diff-based fallback; demo bugs have hand-written levels. For the scan pipeline: call `prepareLevels(bugs)` from `src/lib/game.ts` after saving bugs (like `prepareQuizzes`).

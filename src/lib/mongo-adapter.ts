@@ -1,4 +1,5 @@
 import type { Bug, Quiz } from "./contract";
+import type { Level } from "./levelTypes";
 
 // Talks to the same MongoDB as Harshitha's lib/mongo.ts (db "debugquest", collections bugs/quizzes)
 // but converts between her field names (bugId, unlocked) and the team contract (id, locked) right here,
@@ -59,4 +60,14 @@ export async function mGetQuiz(bugId: string) {
 }
 export async function mSaveQuiz(q: Quiz) {
   await (await db()).collection("quizzes").replaceOne({ bugId: q.bugId }, { ...q }, { upsert: true });
+}
+export async function mGetLevel(bugId: string) {
+  const d = await (await db()).collection("levels").findOne({ bugId });
+  if (!d) return null;
+  const { _id: _i, ...rest } = d as AnyDoc;
+  void _i;
+  return rest as unknown as Level;
+}
+export async function mSaveLevel(l: Level) {
+  await (await db()).collection("levels").replaceOne({ bugId: l.bugId }, { ...l }, { upsert: true });
 }

@@ -18,7 +18,7 @@ export default function LockedCard({ bug }: { bug: PublicBug }) {
         <div className="text-xs text-[#ede8dc]/50">lines {bug.lineStart} to {bug.lineEnd}</div>
       </div>
       <span className="w-fit rounded-sm bg-white/5 px-2 py-0.5 font-mono text-xs text-[#ede8dc]/80">{bug.category}</span>
-      <Link href={`/quiz/${bug.id}`}
+      <Link href={`/play/${bug.id}`}
         className={`mt-1 rounded-sm px-3 py-2 text-center font-display text-sm font-semibold ${open ? "border border-ok/60 text-ok hover:bg-ok/10" : "bg-accent text-[#1a1203] hover:brightness-110"}`}>
         {open ? "View fix" : "Unlock fix"}
       </Link>
