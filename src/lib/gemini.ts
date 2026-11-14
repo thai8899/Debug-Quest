@@ -26,7 +26,7 @@ export async function findBugs(files: { path: string; content: string }[], tests
   const code = files.map((f) => `=== FILE: ${f.path} ===\n${f.content}`).join("\n\n");
   const testInfo = tests.ran ? `Test command: ${tests.command}\nFailing: ${tests.failing}\nOutput tail:\n${tests.output}` : "No tests detected.";
   const res = await ai.models.generateContent({
-    model: process.env.GEMINI_MODEL || "gemini-2.5-pro",
+    model: process.env.GEMINI_MODEL || "gemini-3-flash-preview",
     contents: `${PROMPT}\n\n${testInfo}\n\n${code}`,
     config: {
       responseMimeType: "application/json",

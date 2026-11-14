@@ -2,6 +2,8 @@
 
 Your AI did the work. Now earn it.
 
+Built by Oluwafemi Omotowa for SunHacks 2026.
+
 Paste a GitHub repo. Gemini finds bugs, fixes them on a new branch (main is never touched), opens a PR, and **locks** the fix behind a quiz built from the repo's own code.
 
 ## Run

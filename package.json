@@ -2,6 +2,7 @@
   "name": "debug-quest",
   "version": "0.1.0",
   "private": true,
+  "author": "Oluwafemi Omotowa",
   "scripts": {
     "dev": "next dev",
     "build": "next build",
