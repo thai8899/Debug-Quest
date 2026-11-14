@@ -1,30 +1,46 @@
 @import "tailwindcss";
 
 @theme {
-  --color-bg: #1a1245;
-  --color-panel: rgb(34 24 92 / 0.62);
-  --color-line: rgb(255 255 255 / 0.16);
-  --color-accent: #ffc933;
-  --color-sev-high: #ff5d73;
-  --color-sev-medium: #ffb84d;
-  --color-sev-low: #5db3ff;
-  --font-pixel: "Press Start 2P", ui-monospace, monospace;
+  --color-bg: #070b16;
+  --color-panel: rgb(16 24 48 / 0.78);
+  --color-line: rgb(237 232 220 / 0.12);
+  --color-accent: #d6b25e;
+  --color-ok: #4fd1c5;
+  --color-sev-high: #ff5a36;
+  --color-sev-medium: #f0a04b;
+  --color-sev-low: #6ea8ff;
+  --font-display: "Chakra Petch", ui-sans-serif, system-ui, sans-serif;
+  --font-sans: "IBM Plex Sans", ui-sans-serif, system-ui, sans-serif;
 }
 
 body {
-  background: #0c0828;
-  color: #f1eefc;
-  font-family: Inter, system-ui, sans-serif;
+  background: var(--color-bg);
+  color: #ede8dc;
+  font-family: var(--font-sans);
   margin: 0;
 }
 
-/* Chunky, pressable game buttons */
-.chunky { box-shadow: 0 5px 0 rgba(0, 0, 0, 0.35); transition: transform 0.08s, box-shadow 0.08s; }
-.chunky:active:not(:disabled) { transform: translateY(4px); box-shadow: 0 1px 0 rgba(0, 0, 0, 0.35); }
+.bg-panel { backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); }
 
-.bg-panel { backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); }
-@keyframes twinkle { 0%, 100% { opacity: 0.25; } 50% { opacity: 1; } }
-.twinkle { animation: twinkle 3.5s ease-in-out infinite; }
-@keyframes floaty { 0% { transform: translateY(0); opacity: 0; } 15% { opacity: 1; } 100% { transform: translateY(-95vh); opacity: 0; } }
-.floaty { animation: floaty 16s linear infinite; }
-@media (prefers-reduced-motion: reduce) { .twinkle, .floaty { animation: none; } }
+/* HUD corner ticks: used on the one panel per screen that holds the evidence. */
+.ticks { position: relative; }
+.ticks::before, .ticks::after { content: ""; position: absolute; width: 14px; height: 14px; border: 2px solid var(--color-accent); pointer-events: none; }
+.ticks::before { top: -1px; left: -1px; border-right: 0; border-bottom: 0; }
+.ticks::after { bottom: -1px; right: -1px; border-left: 0; border-top: 0; }
+
+/* Backdrop: perspective floor grid + one slow scan line */
+.grid-floor {
+  background-image:
+    linear-gradient(rgba(214, 178, 94, 0.16) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(214, 178, 94, 0.16) 1px, transparent 1px);
+  background-size: 64px 64px;
+  transform: perspective(520px) rotateX(62deg);
+  transform-origin: 50% 100%;
+  mask-image: linear-gradient(to top, black 10%, transparent 85%);
+  -webkit-mask-image: linear-gradient(to top, black 10%, transparent 85%);
+}
+@keyframes scan { 0% { transform: translateY(-10vh); opacity: 0; } 10% { opacity: 1; } 90% { opacity: 1; } 100% { transform: translateY(105vh); opacity: 0; } }
+.scanline { animation: scan 11s linear infinite; }
+
+:focus-visible { outline: 2px solid var(--color-accent); outline-offset: 2px; }
+@media (prefers-reduced-motion: reduce) { .scanline { animation: none; opacity: 0; } }

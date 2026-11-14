@@ -2,24 +2,25 @@ import Link from "next/link";
 import { Lock, LockOpen } from "lucide-react";
 import type { PublicBug } from "@/lib/contract";
 
-const SEV = { high: "text-sev-high border-sev-high", medium: "text-sev-medium border-sev-medium", low: "text-sev-low border-sev-low" };
+const SEV = { high: "bg-sev-high text-sev-high", medium: "bg-sev-medium text-sev-medium", low: "bg-sev-low text-sev-low" };
 
 export default function LockedCard({ bug }: { bug: PublicBug }) {
   const open = !bug.locked;
   return (
-    <div className={`chunky rounded-2xl border-2 bg-panel p-4 flex flex-col gap-3 ${open ? "border-accent" : "border-line"}`}>
+    <div className="relative flex flex-col gap-3 overflow-hidden rounded-md border border-line bg-panel p-4 pl-5">
+      <span className={`absolute inset-y-0 left-0 w-1 ${SEV[bug.severity].split(" ")[0]}`} />
       <div className="flex items-center justify-between">
-        {open ? <LockOpen className="text-accent" size={28} /> : <Lock className="text-sev-medium" size={28} />}
-        <span className={`rounded-full border px-2 py-0.5 text-xs uppercase ${SEV[bug.severity]}`}>{bug.severity}</span>
+        {open ? <LockOpen className="text-ok" size={20} /> : <Lock className="text-accent" size={20} />}
+        <span className={`text-xs font-semibold ${SEV[bug.severity].split(" ")[1]}`}>{bug.severity} severity</span>
       </div>
       <div>
-        <div className="font-mono text-sm break-all">{bug.file}</div>
-        <div className="text-xs opacity-60">lines {bug.lineStart}-{bug.lineEnd}</div>
+        <div className="break-all font-mono text-sm">{bug.file}</div>
+        <div className="text-xs text-[#ede8dc]/50">lines {bug.lineStart} to {bug.lineEnd}</div>
       </div>
-      <span className="self-start rounded bg-line px-2 py-1 text-xs">{bug.category}</span>
+      <span className="w-fit rounded-sm bg-white/5 px-2 py-0.5 font-mono text-xs text-[#ede8dc]/80">{bug.category}</span>
       <Link href={`/quiz/${bug.id}`}
-        className={`chunky mt-auto rounded-xl px-3 py-2 text-center font-pixel text-[10px] leading-4 ${open ? "bg-accent/15 text-accent" : "bg-accent text-black hover:brightness-110"}`}>
-        {open ? "VIEW FIX" : "PLAY TO UNLOCK"}
+        className={`mt-1 rounded-sm px-3 py-2 text-center font-display text-sm font-semibold ${open ? "border border-ok/60 text-ok hover:bg-ok/10" : "bg-accent text-[#1a1203] hover:brightness-110"}`}>
+        {open ? "View fix" : "Unlock fix"}
       </Link>
     </div>
   );

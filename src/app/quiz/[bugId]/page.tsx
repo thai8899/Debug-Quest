@@ -8,14 +8,17 @@ import CodeBlock from "@/components/CodeBlock";
 import UnlockReveal from "@/components/UnlockReveal";
 import FixBuilder from "@/components/FixBuilder";
 import Mascot from "@/components/Mascot";
-import Logo from "@/components/Logo";
 import SpeechBubble from "@/components/SpeechBubble";
+import Logo from "@/components/Logo";
 
 type QuizData = { bugId: string; scanId: string; file: string; category: string; unlocked: boolean; bug?: Bug; passScore: number; questions: PublicQuestion[] };
 type Review = { prompt: string; correct: boolean; whyCorrect: string };
 type Result =
   | { passed: true; xpEarned: number; correct: number; total: number; bug: Bug; review: Review[] }
   | { passed: false; correct: number; total: number; hint: string };
+
+const SAYS = ["Read the code before you answer.", "One down. Keep reading closely.", "Last one. Build the fix."];
+const btn = "rounded-sm bg-accent px-5 py-3 font-display text-sm font-semibold text-[#1a1203] hover:brightness-110";
 
 export default function QuizPage() {
   const { bugId } = useParams<{ bugId: string }>();
@@ -31,7 +34,7 @@ export default function QuizPage() {
   useEffect(() => {
     fetch(`/api/quiz/${bugId}`).then(async (r) => {
       const j = await r.json();
-      if (!r.ok) return setError(j.error ?? "Could not load quiz");
+      if (!r.ok) return setError(j.error ?? "Could not load the quiz.");
       setQuiz(j);
     });
   }, [bugId]);
@@ -49,8 +52,9 @@ export default function QuizPage() {
   function pick(i: number) {
     if (!quiz || busy) return;
     const next = [...answers, i];
-    if (next.length === quiz.questions.length) { setAnswers(next); submit(next); }
-    else { setAnswers(next); setStep(step + 1); }
+    setAnswers(next);
+    if (next.length === quiz.questions.length) submit(next);
+    else setStep(step + 1);
   }
 
   async function showHint() {
@@ -64,7 +68,7 @@ export default function QuizPage() {
     const q = quiz.questions[step];
     const onKey = (e: KeyboardEvent) => {
       const n = parseInt(e.key, 10);
-      if (n >= 1 && n <= q.options.length) pick(n - 1);
+      if (n >= 1 && n <= q.options.length && q.type !== "pick-the-fix") pick(n - 1);
     };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
@@ -72,20 +76,20 @@ export default function QuizPage() {
 
   function retry() { setAnswers([]); setStep(0); setResult(null); setHints({}); startedAt.current = Date.now(); }
 
-  const back = <Link href={`/scan/${quiz?.scanId ?? "demo"}`} className="mb-4 inline-flex items-center gap-1 text-sm opacity-70 hover:opacity-100"><ArrowLeft size={14} /> Back to bugs</Link>;
+  const back = <Link href={`/scan/${quiz?.scanId ?? "demo"}`} className="mb-5 inline-flex items-center gap-1 text-sm text-[#ede8dc]/60 hover:text-[#ede8dc]"><ArrowLeft size={14} /> Back to bugs</Link>;
+
   if (error)
     return (
       <Page>
         {back}
         <p className="text-sev-high">{error}</p>
-        <button onClick={() => location.reload()} className="chunky mt-4 rounded-xl bg-accent px-4 py-2 font-pixel text-[10px] text-black">RETRY</button>
+        <button onClick={() => location.reload()} className={`${btn} mt-4`}>Try again</button>
       </Page>
     );
   if (!quiz)
     return (
       <Page>
-        <p className="font-pixel text-xs">WRITING YOUR QUIZ...</p>
-        <p className="mt-3 text-sm opacity-60">Gemini is building questions from your own code. This takes a few seconds.</p>
+        <div className="flex items-center gap-4"><Mascot size={56} mood="run" /><SpeechBubble>Writing your challenge from your own code. A few seconds.</SpeechBubble></div>
       </Page>
     );
 
@@ -94,12 +98,12 @@ export default function QuizPage() {
   if (result?.passed) {
     return (
       <Page>
-        <UnlockReveal bug={result.bug} xp={result.xpEarned} />
-        <div className="mt-6 rounded-xl border border-line bg-panel p-4 text-sm">
-          <div className="mb-2 font-pixel text-[10px] text-accent">HOW YOU DID · {result.correct}/{result.total}</div>
-          <ul className="space-y-2">{result.review.map((r, i) => <li key={i}>{r.correct ? "✅" : "❌"} {r.whyCorrect}</li>)}</ul>
-        </div>
         {back}
+        <UnlockReveal bug={result.bug} xp={result.xpEarned} />
+        <div className="mt-6 rounded-md border border-line bg-panel p-4 text-sm">
+          <div className="mb-2 font-display text-base font-semibold">Your answers: {result.correct} of {result.total} correct</div>
+          <ul className="space-y-2">{result.review.map((r, i) => <li key={i} className={r.correct ? "text-ok" : "text-sev-high"}><span className="text-[#ede8dc]/90">{r.correct ? "Correct. " : "Missed. "}{r.whyCorrect}</span></li>)}</ul>
+        </div>
       </Page>
     );
   }
@@ -108,11 +112,16 @@ export default function QuizPage() {
     return (
       <Page>
         {back}
-        <div className="rounded-xl border-2 border-sev-high bg-panel p-6 text-center">
-          <div className="mb-2 flex justify-center"><Mascot size={88} mood="sad" /></div>
-          <div className="font-pixel text-sm text-sev-high">NOT QUITE · {result.correct}/{result.total}</div>
-          <p className="mt-4 flex items-start justify-center gap-2 text-sm"><Lightbulb size={16} className="mt-0.5 text-sev-medium" /> {result.hint}</p>
-          <button onClick={retry} className="chunky mt-6 rounded-xl bg-accent px-5 py-3 font-pixel text-[10px] text-black hover:brightness-110">TRY AGAIN</button>
+        <div className="rounded-md border border-sev-high/50 bg-panel p-6">
+          <div className="flex items-center gap-4">
+            <Mascot size={64} mood="sad" />
+            <div>
+              <div className="font-display text-2xl font-bold">Not yet. {result.correct} of {result.total} correct.</div>
+              <p className="mt-1 text-sm text-[#ede8dc]/60">You need {quiz.passScore} to unlock the fix.</p>
+            </div>
+          </div>
+          <p className="mt-4 flex items-start gap-2 text-sm"><Lightbulb size={16} className="mt-0.5 shrink-0 text-accent" /> {result.hint}</p>
+          <button onClick={retry} className={`${btn} mt-6`}>Try again</button>
         </div>
       </Page>
     );
@@ -122,20 +131,26 @@ export default function QuizPage() {
   return (
     <Page>
       {back}
-      <div className="mb-1 flex justify-between text-xs opacity-70"><span>{quiz.file}</span><span>Question {step + 1} of {quiz.questions.length}</span></div>
-      <div className="mb-6 h-2 rounded-full bg-line"><div className="h-full rounded-full bg-accent transition-all" style={{ width: `${(step / quiz.questions.length) * 100}%` }} /></div>
-      <div className="mb-4 flex items-center gap-3">
-        <Mascot size={72} mood={busy ? "run" : hints[step] ? "idle" : "happy"} />
-        <SpeechBubble>{busy ? "Checking your answers..." : hints[step] ? "Here's a little hint!" : SAYS[Math.min(step, SAYS.length - 1)]}</SpeechBubble>
+      <div className="mb-5 flex items-center justify-between gap-4 text-sm text-[#ede8dc]/60">
+        <span className="font-mono">{quiz.file} <span className="text-[#ede8dc]/30">/</span> {quiz.category}</span>
+        <span>Question {step + 1} of {quiz.questions.length}</span>
       </div>
-      <h2 className="mb-4 text-xl font-bold">{q.prompt}</h2>
+      <div className="mb-6 grid gap-1.5" style={{ gridTemplateColumns: `repeat(${quiz.questions.length}, 1fr)` }} aria-hidden>
+        {quiz.questions.map((_, i) => <div key={i} className={`h-1.5 rounded-full ${i < step ? "bg-accent" : i === step ? "bg-accent/50" : "bg-white/10"}`} />)}
+      </div>
+
+      <div className="mb-6 flex items-center gap-4">
+        <Mascot size={56} mood={busy ? "run" : "idle"} />
+        <SpeechBubble>{busy ? "Checking your answers." : hints[step] ?? SAYS[Math.min(step, SAYS.length - 1)]}</SpeechBubble>
+      </div>
+
+      <h2 className="mb-5 font-display text-2xl font-semibold leading-snug">{q.prompt}</h2>
 
       {q.type === "spot-the-line" ? (
-        <div className="overflow-x-auto rounded-xl border border-line bg-[#10102a] font-mono text-sm">
+        <div className="ticks overflow-x-auto rounded-md border border-line bg-[#0a1122] font-mono text-sm">
           {q.options.map((line, i) => (
-            <button key={i} disabled={busy} onClick={() => pick(i)}
-              className="flex w-full min-w-max gap-4 px-3 py-1.5 text-left hover:bg-accent/20">
-              <span className="w-5 select-none text-right opacity-40">{i + 1}</span>
+            <button key={i} disabled={busy} onClick={() => pick(i)} className="flex w-full min-w-max items-center gap-4 px-3 py-1.5 text-left hover:bg-accent/15">
+              <span className="w-5 select-none text-right text-[#ede8dc]/35">{i + 1}</span>
               <span className="whitespace-pre">{line || " "}</span>
             </button>
           ))}
@@ -144,12 +159,12 @@ export default function QuizPage() {
         <FixBuilder key={step} code={q.code} options={q.options} disabled={busy} onSubmit={pick} />
       ) : (
         <>
-          {q.code && <CodeBlock code={q.code} />}
-          <div className="mt-4 grid gap-3">
+          {q.code && <div className="ticks"><CodeBlock code={q.code} /></div>}
+          <div className="mt-4 grid gap-2">
             {q.options.map((o, i) => (
               <button key={i} disabled={busy} onClick={() => pick(i)}
-                className={`chunky flex items-center gap-4 rounded-2xl p-4 text-left font-mono text-base font-semibold ring-1 ring-white/30 hover:brightness-110 ${TILES[i % 4]}`}>
-                <span className="grid h-9 w-9 shrink-0 place-items-center rounded-lg bg-black/25 font-pixel text-xs text-white">{"ABCD"[i]}</span>{o}
+                className="flex items-center gap-4 rounded-md border border-line bg-panel px-4 py-3 text-left font-mono text-sm hover:border-accent/70 hover:bg-accent/5">
+                <kbd className="grid h-7 w-7 shrink-0 place-items-center rounded-sm border border-line bg-white/5 font-mono text-xs text-accent">{i + 1}</kbd>{o}
               </button>
             ))}
           </div>
@@ -157,24 +172,13 @@ export default function QuizPage() {
       )}
 
       <div className="mt-6">
-        {hints[step] ? (
-          <p className="flex items-start gap-2 text-sm text-sev-medium"><Lightbulb size={16} className="mt-0.5" /> {hints[step]}</p>
-        ) : (
-          <button onClick={showHint} className="inline-flex items-center gap-2 text-sm opacity-70 hover:opacity-100"><Lightbulb size={16} /> Show hint</button>
+        {hints[step] ? null : (
+          <button onClick={showHint} className="inline-flex items-center gap-2 text-sm text-[#ede8dc]/60 hover:text-[#ede8dc]"><Lightbulb size={16} /> Show hint</button>
         )}
       </div>
-      {busy && <p className="mt-4 font-pixel text-[10px]">CHECKING...</p>}
     </Page>
   );
 }
-
-const SAYS = ["Roar! Let's hunt this bug!", "Halfway there, you've got this!", "Last one! Build the fix!"];
-const TILES = [
-  "bg-linear-to-b from-[#ff7f93] to-[#e8405f] text-white",
-  "bg-linear-to-b from-[#6c9bff] to-[#3a5fe0] text-white",
-  "bg-linear-to-b from-[#ffd966] to-[#f0a500] text-[#3a2600]",
-  "bg-linear-to-b from-[#5eeaa0] to-[#1fb56a] text-[#06301c]",
-];
 
 function Page({ children }: { children: React.ReactNode }) {
   return (

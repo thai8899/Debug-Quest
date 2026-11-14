@@ -1,31 +1,29 @@
 "use client";
 import { motion } from "framer-motion";
 
-// Original mascot "Roary" the lion. Moods change the mouth and the bounce.
-export default function Mascot({ size = 64, mood = "idle" }: { size?: number; mood?: "idle" | "run" | "happy" | "sad" }) {
-  const mane = [0, 36, 72, 108, 144, 180, 216, 252, 288, 324].map((a) => {
-    const r = (a * Math.PI) / 180;
-    return { x: 32 + Math.cos(r) * 21, y: 33 + Math.sin(r) * 21 };
-  });
-  const mouth =
-    mood === "sad" ? "M26 46 Q32 41 38 46"
-    : mood === "happy" || mood === "run" ? "M25 42 Q32 52 39 42 Z"
-    : "M27 43 Q32 48 37 43";
+// The warden: a faceted brass lion emblem. Mood shows as a glow, not a cartoon expression.
+const GLOW = {
+  idle: "drop-shadow(0 0 6px rgba(214,178,94,.35))",
+  run: "drop-shadow(0 0 12px rgba(214,178,94,.8))",
+  happy: "drop-shadow(0 0 14px rgba(79,209,197,.85))",
+  sad: "drop-shadow(0 0 12px rgba(255,90,54,.75))",
+} as const;
+
+export default function Mascot({ size = 64, mood = "idle" }: { size?: number; mood?: keyof typeof GLOW }) {
+  const eye = mood === "sad" ? "#ff5a36" : mood === "happy" ? "#4fd1c5" : "#1a1203";
   return (
-    <motion.svg width={size} height={size} viewBox="0 0 64 64" aria-label="Roary the lion"
-      animate={mood === "run" ? { y: [0, -5, 0] } : mood === "happy" ? { rotate: [0, -8, 8, 0] } : { y: [0, -2, 0] }}
-      transition={{ repeat: Infinity, duration: mood === "run" ? 0.3 : 1.8 }}>
-      {mane.map((p, i) => <circle key={i} cx={p.x} cy={p.y} r="9" fill={i % 2 ? "#ff8a1f" : "#f26a00"} />)}
-      <circle cx="32" cy="33" r="20" fill="#ff8a1f" />
-      <circle cx="19" cy="20" r="6.5" fill="#ffd166" /><circle cx="19" cy="20" r="3" fill="#ff9aa2" />
-      <circle cx="45" cy="20" r="6.5" fill="#ffd166" /><circle cx="45" cy="20" r="3" fill="#ff9aa2" />
-      <circle cx="32" cy="34" r="16" fill="#ffd166" />
-      <ellipse cx="32" cy="42" rx="9" ry="6.5" fill="#fff3cf" />
-      <circle cx="25" cy="31" r="3.4" fill="#2b1b0f" /><circle cx="39" cy="31" r="3.4" fill="#2b1b0f" />
-      <circle cx="26.2" cy="29.8" r="1.1" fill="#fff" /><circle cx="40.2" cy="29.8" r="1.1" fill="#fff" />
-      <circle cx="20" cy="38" r="3" fill="#ff9aa2" opacity=".7" /><circle cx="44" cy="38" r="3" fill="#ff9aa2" opacity=".7" />
-      <path d="M29 38 H35 L32 42 Z" fill="#c2410c" />
-      <path d={mouth} stroke="#7a2e0e" strokeWidth="2" fill={mood === "happy" || mood === "run" ? "#7a2e0e" : "none"} strokeLinecap="round" strokeLinejoin="round" />
+    <motion.svg width={size} height={size} viewBox="0 0 64 64" role="img" aria-label="Brass lion emblem"
+      style={{ filter: GLOW[mood] }}
+      animate={mood === "run" ? { opacity: [1, 0.75, 1] } : { opacity: 1 }}
+      transition={{ repeat: mood === "run" ? Infinity : 0, duration: 0.7 }}>
+      <polygon fill="#8a6a2b" points="32,2 40,8 48,5 52,15 60,18 57,28 62,37 55,45 54,57 44,53 36,62 32,58 28,62 20,53 10,57 9,45 2,37 7,28 4,18 12,15 16,5 24,8" />
+      <polygon fill="#c9a24b" points="32,9 38,14 46,13 48,22 54,27 52,35 56,42 49,47 46,53 39,50 32,55 25,50 18,53 15,47 8,42 12,35 10,27 16,22 18,13 26,14" />
+      <polygon fill="#e7cb86" points="32,16 42,20 47,30 45,42 38,52 32,55 26,52 19,42 17,30 22,20" />
+      <polygon fill="rgba(0,0,0,.14)" points="32,16 42,20 47,30 45,42 38,52 32,55" />
+      <polygon fill={eye} points="21,29 29,31 28,35 21,33" />
+      <polygon fill={eye} points="43,29 35,31 36,35 43,33" />
+      <polygon fill="#3a2a0e" points="29,38 35,38 32,44" />
+      <path d="M32 44 V48 M26 50 Q32 53 38 50" stroke="#3a2a0e" strokeWidth="1.6" fill="none" strokeLinecap="round" />
     </motion.svg>
   );
 }
