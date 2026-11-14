@@ -6,6 +6,8 @@ import { ArrowLeft, Lightbulb } from "lucide-react";
 import type { Bug, PublicQuestion } from "@/lib/contract";
 import CodeBlock from "@/components/CodeBlock";
 import UnlockReveal from "@/components/UnlockReveal";
+import FixBuilder from "@/components/FixBuilder";
+import Mascot from "@/components/Mascot";
 
 type QuizData = { bugId: string; scanId: string; file: string; category: string; unlocked: boolean; bug?: Bug; passScore: number; questions: PublicQuestion[] };
 type Review = { prompt: string; correct: boolean; whyCorrect: string };
@@ -119,7 +121,10 @@ export default function QuizPage() {
       {back}
       <div className="mb-1 flex justify-between text-xs opacity-70"><span>{quiz.file}</span><span>Question {step + 1} of {quiz.questions.length}</span></div>
       <div className="mb-6 h-2 rounded-full bg-line"><div className="h-full rounded-full bg-accent transition-all" style={{ width: `${(step / quiz.questions.length) * 100}%` }} /></div>
-      <h2 className="mb-4 text-lg font-semibold">{q.prompt}</h2>
+      <div className="mb-4 flex items-center gap-3">
+        <Mascot size={44} mood={busy ? "run" : "idle"} />
+        <h2 className="text-lg font-semibold">{q.prompt}</h2>
+      </div>
 
       {q.type === "spot-the-line" ? (
         <div className="overflow-x-auto rounded-xl border border-line bg-[#10102a] font-mono text-sm">
@@ -131,6 +136,8 @@ export default function QuizPage() {
             </button>
           ))}
         </div>
+      ) : q.type === "pick-the-fix" ? (
+        <FixBuilder key={step} code={q.code} options={q.options} disabled={busy} onSubmit={pick} />
       ) : (
         <>
           {q.code && <CodeBlock code={q.code} />}
