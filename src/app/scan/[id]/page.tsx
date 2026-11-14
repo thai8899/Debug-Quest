@@ -1,0 +1,71 @@
+"use client";
+import { useEffect, useState } from "react";
+import { useParams } from "next/navigation";
+import { motion } from "framer-motion";
+import { GitPullRequest } from "lucide-react";
+import type { Scan } from "@/lib/contract";
+import LockedCard from "@/components/LockedCard";
+
+export default function ScanPage() {
+  const { id } = useParams<{ id: string }>();
+  const [scan, setScan] = useState<Scan | null>(null);
+  const [error, setError] = useState("");
+
+  useEffect(() => {
+    let stop = false;
+    async function load() {
+      const r = await fetch(`/api/scan/${id}`);
+      if (!r.ok) return setError("Scan not found");
+      const s: Scan = await r.json();
+      if (stop) return;
+      setScan(s);
+      if (s.status === "running") setTimeout(load, 3000);
+    }
+    load();
+    return () => { stop = true; };
+  }, [id]);
+
+  if (error) return <Shell><p className="text-sev-high">{error}</p></Shell>;
+  if (!scan || scan.status === "running")
+    return (
+      <Shell>
+        <div className="mt-16 text-center">
+          <div className="font-pixel text-sm">HUNTING BUGS...</div>
+          <div className="mx-auto mt-6 h-3 w-72 overflow-hidden rounded-full bg-line">
+            <motion.div className="h-full w-1/3 rounded-full bg-accent" animate={{ x: [-100, 260] }} transition={{ repeat: Infinity, duration: 1.2, ease: "easeInOut" }} />
+          </div>
+        </div>
+      </Shell>
+    );
+  if (scan.status === "error") return <Shell><p className="text-sev-high">The scan failed. Try another repo.</p></Shell>;
+
+  const locked = scan.bugs.filter((b) => b.locked).length;
+  return (
+    <Shell>
+      <p className="mb-4 text-sm opacity-70">{scan.repoUrl.replace("https://github.com/", "")}</p>
+      {scan.testsBefore && scan.testsAfter && (
+        <div className="mb-4 rounded-xl border border-accent/40 bg-accent/10 p-4">
+          <span className="font-pixel text-xs text-accent">TESTS: {scan.testsBefore.fail} FAILING → {scan.testsAfter.fail} FAILING</span>
+        </div>
+      )}
+      {scan.prUrl && (
+        <a href={scan.prUrl} target="_blank" rel="noreferrer" className="mb-6 inline-flex items-center gap-2 text-sm text-sev-low hover:underline">
+          <GitPullRequest size={16} /> Pull request on {scan.fixBranch} (main untouched)
+        </a>
+      )}
+      <h2 className="mb-4 font-pixel text-xs">{scan.bugs.length} BUGS FOUND · {locked} LOCKED</h2>
+      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+        {scan.bugs.map((b) => <LockedCard key={b.id} bug={b} />)}
+      </div>
+    </Shell>
+  );
+}
+
+function Shell({ children }: { children: React.ReactNode }) {
+  return (
+    <main className="mx-auto max-w-5xl p-6">
+      <h1 className="mb-6 font-pixel text-lg text-accent">DEBUG QUEST</h1>
+      {children}
+    </main>
+  );
+}
