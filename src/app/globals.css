@@ -2,8 +2,8 @@
 
 @theme {
   --color-bg: #1a1245;
-  --color-panel: #2a1f6b;
-  --color-line: #4a3a9a;
+  --color-panel: rgb(34 24 92 / 0.62);
+  --color-line: rgb(255 255 255 / 0.16);
   --color-accent: #ffc933;
   --color-sev-high: #ff5d73;
   --color-sev-medium: #ffb84d;
@@ -12,8 +12,8 @@
 }
 
 body {
-  background: radial-gradient(circle at 20% 0%, #3b2a9a 0%, var(--color-bg) 55%) fixed;
-  color: #e8e8f5;
+  background: #0c0828;
+  color: #f1eefc;
   font-family: Inter, system-ui, sans-serif;
   margin: 0;
 }
@@ -21,3 +21,10 @@ body {
 /* Chunky, pressable game buttons */
 .chunky { box-shadow: 0 5px 0 rgba(0, 0, 0, 0.35); transition: transform 0.08s, box-shadow 0.08s; }
 .chunky:active:not(:disabled) { transform: translateY(4px); box-shadow: 0 1px 0 rgba(0, 0, 0, 0.35); }
+
+.bg-panel { backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); }
+@keyframes twinkle { 0%, 100% { opacity: 0.25; } 50% { opacity: 1; } }
+.twinkle { animation: twinkle 3.5s ease-in-out infinite; }
+@keyframes floaty { 0% { transform: translateY(0); opacity: 0; } 15% { opacity: 1; } 100% { transform: translateY(-95vh); opacity: 0; } }
+.floaty { animation: floaty 16s linear infinite; }
+@media (prefers-reduced-motion: reduce) { .twinkle, .floaty { animation: none; } }

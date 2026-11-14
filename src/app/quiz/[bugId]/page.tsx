@@ -8,6 +8,7 @@ import CodeBlock from "@/components/CodeBlock";
 import UnlockReveal from "@/components/UnlockReveal";
 import FixBuilder from "@/components/FixBuilder";
 import Mascot from "@/components/Mascot";
+import Logo from "@/components/Logo";
 import SpeechBubble from "@/components/SpeechBubble";
 
 type QuizData = { bugId: string; scanId: string; file: string; category: string; unlocked: boolean; bug?: Bug; passScore: number; questions: PublicQuestion[] };
@@ -147,7 +148,9 @@ export default function QuizPage() {
           <div className="mt-4 grid gap-3">
             {q.options.map((o, i) => (
               <button key={i} disabled={busy} onClick={() => pick(i)}
-                className={`chunky rounded-2xl p-4 text-left font-mono text-base font-semibold hover:brightness-110 ${TILES[i % 4]}`}>{o}</button>
+                className={`chunky flex items-center gap-4 rounded-2xl p-4 text-left font-mono text-base font-semibold ring-1 ring-white/30 hover:brightness-110 ${TILES[i % 4]}`}>
+                <span className="grid h-9 w-9 shrink-0 place-items-center rounded-lg bg-black/25 font-pixel text-xs text-white">{"ABCD"[i]}</span>{o}
+              </button>
             ))}
           </div>
         </>
@@ -166,12 +169,17 @@ export default function QuizPage() {
 }
 
 const SAYS = ["Roar! Let's hunt this bug!", "Halfway there, you've got this!", "Last one! Build the fix!"];
-const TILES = ["bg-[#ff5d73] text-white", "bg-[#4d8dff] text-white", "bg-[#ffc933] text-black", "bg-[#3ddc84] text-black"];
+const TILES = [
+  "bg-linear-to-b from-[#ff7f93] to-[#e8405f] text-white",
+  "bg-linear-to-b from-[#6c9bff] to-[#3a5fe0] text-white",
+  "bg-linear-to-b from-[#ffd966] to-[#f0a500] text-[#3a2600]",
+  "bg-linear-to-b from-[#5eeaa0] to-[#1fb56a] text-[#06301c]",
+];
 
 function Page({ children }: { children: React.ReactNode }) {
   return (
     <main className="mx-auto max-w-3xl p-4 sm:p-6">
-      <h1 className="mb-6 font-pixel text-lg text-accent">DEBUG QUEST</h1>
+      <Logo />
       {children}
     </main>
   );

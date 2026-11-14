@@ -6,6 +6,7 @@ import { GitPullRequest } from "lucide-react";
 import type { Scan } from "@/lib/contract";
 import LockedCard from "@/components/LockedCard";
 import Mascot from "@/components/Mascot";
+import Logo from "@/components/Logo";
 import SpeechBubble from "@/components/SpeechBubble";
 
 export default function ScanPage() {
@@ -80,7 +81,7 @@ export default function ScanPage() {
 function Shell({ children }: { children: React.ReactNode }) {
   return (
     <main className="mx-auto max-w-5xl p-6">
-      <h1 className="mb-6 font-pixel text-lg text-accent">DEBUG QUEST</h1>
+      <Logo />
       {children}
     </main>
   );
