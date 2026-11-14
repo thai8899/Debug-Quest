@@ -41,22 +41,22 @@ export default function FixBuilder({ code, options, disabled, onSubmit }: {
           <div key={i} draggable={!running && !disabled}
             onDragStart={(e) => e.dataTransfer.setData("text/plain", String(i))}
             onClick={() => place(i)}
-            className={`flex cursor-grab items-center gap-2 rounded-xl border-2 bg-panel p-3 font-mono text-sm active:cursor-grabbing ${placed === i ? "border-accent opacity-50" : "border-line hover:border-accent"}`}>
+            className={`chunky flex cursor-grab items-center gap-2 rounded-2xl border-2 bg-panel p-3 font-mono text-sm active:cursor-grabbing ${placed === i ? "border-accent opacity-50" : "border-line hover:border-accent"}`}>
             <GripVertical size={16} className="shrink-0 opacity-40" /> {o}
           </div>
         ))}
       </div>
 
-      <div className="relative h-14 overflow-hidden rounded-xl bg-[#10102a]">
+      <div className="relative h-16 overflow-hidden rounded-xl bg-[#10102a]">
         <div className="absolute inset-x-0 bottom-3 h-px bg-line" />
         <motion.div className="absolute bottom-2 left-2" animate={{ left: running ? "calc(100% - 3.5rem)" : "0.5rem" }} transition={{ duration: 0.85, ease: "easeIn" }}>
-          <Mascot size={44} mood={running ? "run" : placed !== null ? "happy" : "idle"} />
+          <Mascot size={52} mood={running ? "run" : placed !== null ? "happy" : "idle"} />
         </motion.div>
         <div className="absolute bottom-3 right-3 text-xs opacity-50">🏁</div>
       </div>
 
       <button onClick={run} disabled={placed === null || running || disabled}
-        className="inline-flex items-center justify-center gap-2 rounded-lg bg-accent px-5 py-3 font-pixel text-[10px] text-black hover:brightness-110 disabled:opacity-40">
+        className="chunky inline-flex items-center justify-center gap-2 rounded-xl bg-accent px-5 py-3 font-pixel text-[10px] text-black hover:brightness-110 disabled:opacity-40">
         <Play size={14} /> {running ? "RUNNING..." : "RUN FIX"}
       </button>
     </div>

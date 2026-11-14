@@ -5,6 +5,8 @@ import { motion } from "framer-motion";
 import { GitPullRequest } from "lucide-react";
 import type { Scan } from "@/lib/contract";
 import LockedCard from "@/components/LockedCard";
+import Mascot from "@/components/Mascot";
+import SpeechBubble from "@/components/SpeechBubble";
 
 export default function ScanPage() {
   const { id } = useParams<{ id: string }>();
@@ -29,8 +31,9 @@ export default function ScanPage() {
   if (!scan || scan.status === "running")
     return (
       <Shell>
-        <div className="mt-16 text-center">
-          <div className="font-pixel text-sm">HUNTING BUGS...</div>
+        <div className="mt-12 flex flex-col items-center text-center">
+          <Mascot size={110} mood="run" />
+          <div className="mt-4 font-pixel text-sm">HUNTING BUGS...</div>
           <div className="mx-auto mt-6 h-3 w-72 overflow-hidden rounded-full bg-line">
             <motion.div className="h-full w-1/3 rounded-full bg-accent" animate={{ x: [-100, 260] }} transition={{ repeat: Infinity, duration: 1.2, ease: "easeInOut" }} />
           </div>
@@ -42,6 +45,10 @@ export default function ScanPage() {
   const locked = scan.bugs.filter((b) => b.locked).length;
   return (
     <Shell>
+      <div className="mb-4 flex items-center gap-3">
+        <Mascot size={80} mood={locked ? "idle" : "happy"} />
+        <SpeechBubble>{locked ? `I found ${scan.bugs.length} bugs! Play to unlock the fixes.` : "ROAR! Every fix is yours!"}</SpeechBubble>
+      </div>
       <p className="mb-4 text-sm opacity-70">{scan.repoUrl.replace("https://github.com/", "")}</p>
       {scan.testsBefore && scan.testsAfter && (
         <div className="mb-4 rounded-xl border border-accent/40 bg-accent/10 p-4">

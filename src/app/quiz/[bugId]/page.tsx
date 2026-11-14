@@ -8,6 +8,7 @@ import CodeBlock from "@/components/CodeBlock";
 import UnlockReveal from "@/components/UnlockReveal";
 import FixBuilder from "@/components/FixBuilder";
 import Mascot from "@/components/Mascot";
+import SpeechBubble from "@/components/SpeechBubble";
 
 type QuizData = { bugId: string; scanId: string; file: string; category: string; unlocked: boolean; bug?: Bug; passScore: number; questions: PublicQuestion[] };
 type Review = { prompt: string; correct: boolean; whyCorrect: string };
@@ -76,7 +77,7 @@ export default function QuizPage() {
       <Page>
         {back}
         <p className="text-sev-high">{error}</p>
-        <button onClick={() => location.reload()} className="mt-4 rounded-lg bg-accent px-4 py-2 font-pixel text-[10px] text-black">RETRY</button>
+        <button onClick={() => location.reload()} className="chunky mt-4 rounded-xl bg-accent px-4 py-2 font-pixel text-[10px] text-black">RETRY</button>
       </Page>
     );
   if (!quiz)
@@ -107,9 +108,10 @@ export default function QuizPage() {
       <Page>
         {back}
         <div className="rounded-xl border-2 border-sev-high bg-panel p-6 text-center">
+          <div className="mb-2 flex justify-center"><Mascot size={88} mood="sad" /></div>
           <div className="font-pixel text-sm text-sev-high">NOT QUITE · {result.correct}/{result.total}</div>
           <p className="mt-4 flex items-start justify-center gap-2 text-sm"><Lightbulb size={16} className="mt-0.5 text-sev-medium" /> {result.hint}</p>
-          <button onClick={retry} className="mt-6 rounded-lg bg-accent px-5 py-3 font-pixel text-[10px] text-black hover:brightness-110">TRY AGAIN</button>
+          <button onClick={retry} className="chunky mt-6 rounded-xl bg-accent px-5 py-3 font-pixel text-[10px] text-black hover:brightness-110">TRY AGAIN</button>
         </div>
       </Page>
     );
@@ -122,9 +124,10 @@ export default function QuizPage() {
       <div className="mb-1 flex justify-between text-xs opacity-70"><span>{quiz.file}</span><span>Question {step + 1} of {quiz.questions.length}</span></div>
       <div className="mb-6 h-2 rounded-full bg-line"><div className="h-full rounded-full bg-accent transition-all" style={{ width: `${(step / quiz.questions.length) * 100}%` }} /></div>
       <div className="mb-4 flex items-center gap-3">
-        <Mascot size={44} mood={busy ? "run" : "idle"} />
-        <h2 className="text-lg font-semibold">{q.prompt}</h2>
+        <Mascot size={72} mood={busy ? "run" : hints[step] ? "idle" : "happy"} />
+        <SpeechBubble>{busy ? "Checking your answers..." : hints[step] ? "Here's a little hint!" : SAYS[Math.min(step, SAYS.length - 1)]}</SpeechBubble>
       </div>
+      <h2 className="mb-4 text-xl font-bold">{q.prompt}</h2>
 
       {q.type === "spot-the-line" ? (
         <div className="overflow-x-auto rounded-xl border border-line bg-[#10102a] font-mono text-sm">
@@ -144,7 +147,7 @@ export default function QuizPage() {
           <div className="mt-4 grid gap-3">
             {q.options.map((o, i) => (
               <button key={i} disabled={busy} onClick={() => pick(i)}
-                className="rounded-xl border-2 border-line bg-panel p-4 text-left font-mono text-sm hover:border-accent active:scale-[0.99]">{o}</button>
+                className={`chunky rounded-2xl p-4 text-left font-mono text-base font-semibold hover:brightness-110 ${TILES[i % 4]}`}>{o}</button>
             ))}
           </div>
         </>
@@ -161,6 +164,9 @@ export default function QuizPage() {
     </Page>
   );
 }
+
+const SAYS = ["Roar! Let's hunt this bug!", "Halfway there, you've got this!", "Last one! Build the fix!"];
+const TILES = ["bg-[#ff5d73] text-white", "bg-[#4d8dff] text-white", "bg-[#ffc933] text-black", "bg-[#3ddc84] text-black"];
 
 function Page({ children }: { children: React.ReactNode }) {
   return (

@@ -4,6 +4,7 @@ import { motion } from "framer-motion";
 import { Lock, LockOpen, ExternalLink } from "lucide-react";
 import type { Bug } from "@/lib/contract";
 import CodeBlock from "./CodeBlock";
+import Mascot from "./Mascot";
 
 export default function UnlockReveal({ bug, xp }: { bug: Bug; xp: number }) {
   const [open, setOpen] = useState(false);
@@ -28,6 +29,7 @@ export default function UnlockReveal({ bug, xp }: { bug: Bug; xp: number }) {
           <motion.div initial={{ y: 20, opacity: 0 }} animate={{ y: 0, opacity: 1 }} className="font-pixel text-accent text-lg">+{xp} XP</motion.div>
         )}
         <div className="font-pixel text-xs">{open ? "FIX UNLOCKED" : "UNLOCKING..."}</div>
+        {open && <div className="flex items-center gap-2"><Mascot size={80} mood="happy" /><span className="rounded-2xl bg-white px-4 py-2 text-sm font-bold text-[#2a1f5e]">ROAR! You earned it!</span></div>}
       </div>
 
       {open && (
