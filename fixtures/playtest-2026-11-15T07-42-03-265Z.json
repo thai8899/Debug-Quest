@@ -1,0 +1,156 @@
+[
+  {
+    "type": "STARTED",
+    "run_id": "11faae9a-1ccb-4fa5-a8e5-d665939e43e6",
+    "timestamp": "2026-11-15T07:40:32.052Z"
+  },
+  {
+    "type": "STREAMING_URL",
+    "run_id": "11faae9a-1ccb-4fa5-a8e5-d665939e43e6",
+    "streaming_url": "https://ip-18-145-7-116.tetra-data.production.tinyfish.io/tf-1bb99f13-32c4-4879-ac0d-b52f76239b1b/stream/0",
+    "timestamp": "2026-11-15T07:40:33.684Z"
+  },
+  {
+    "type": "PROGRESS",
+    "run_id": "11faae9a-1ccb-4fa5-a8e5-d665939e43e6",
+    "purpose": "Navigate to to-do app for QA testing",
+    "timestamp": "2026-11-15T07:40:34.712Z"
+  },
+  {
+    "type": "PROGRESS",
+    "run_id": "11faae9a-1ccb-4fa5-a8e5-d665939e43e6",
+    "purpose": "Understand full page layout for QA testing",
+    "timestamp": "2026-11-15T07:40:37.619Z"
+  },
+  {
+    "type": "PROGRESS",
+    "run_id": "11faae9a-1ccb-4fa5-a8e5-d665939e43e6",
+    "purpose": "Count to-dos and check completed counter",
+    "timestamp": "2026-11-15T07:40:41.275Z"
+  },
+  {
+    "type": "PROGRESS",
+    "run_id": "11faae9a-1ccb-4fa5-a8e5-d665939e43e6",
+    "purpose": "Navigate to page 2",
+    "timestamp": "2026-11-15T07:40:46.593Z"
+  },
+  {
+    "type": "PROGRESS",
+    "run_id": "11faae9a-1ccb-4fa5-a8e5-d665939e43e6",
+    "purpose": "Check page 2 layout and error",
+    "timestamp": "2026-11-15T07:40:49.694Z"
+  },
+  {
+    "type": "PROGRESS",
+    "run_id": "11faae9a-1ccb-4fa5-a8e5-d665939e43e6",
+    "purpose": "Navigate to page 3",
+    "timestamp": "2026-11-15T07:40:53.856Z"
+  },
+  {
+    "type": "PROGRESS",
+    "run_id": "11faae9a-1ccb-4fa5-a8e5-d665939e43e6",
+    "purpose": "Check page 3 layout and errors",
+    "timestamp": "2026-11-15T07:40:56.686Z"
+  },
+  {
+    "type": "PROGRESS",
+    "run_id": "11faae9a-1ccb-4fa5-a8e5-d665939e43e6",
+    "purpose": "Focus the new to-do title input",
+    "timestamp": "2026-11-15T07:41:00.607Z"
+  },
+  {
+    "type": "PROGRESS",
+    "run_id": "11faae9a-1ccb-4fa5-a8e5-d665939e43e6",
+    "purpose": "Go back to page 2",
+    "timestamp": "2026-11-15T07:41:03.179Z"
+  },
+  {
+    "type": "PROGRESS",
+    "run_id": "11faae9a-1ccb-4fa5-a8e5-d665939e43e6",
+    "purpose": "Go back to page 1",
+    "timestamp": "2026-11-15T07:41:05.968Z"
+  },
+  {
+    "type": "PROGRESS",
+    "run_id": "11faae9a-1ccb-4fa5-a8e5-d665939e43e6",
+    "purpose": "Enter new to-do title with no due date",
+    "timestamp": "2026-11-15T07:41:09.053Z"
+  },
+  {
+    "type": "PROGRESS",
+    "run_id": "11faae9a-1ccb-4fa5-a8e5-d665939e43e6",
+    "purpose": "Add the new to-do without due date",
+    "timestamp": "2026-11-15T07:41:11.789Z"
+  },
+  {
+    "type": "PROGRESS",
+    "run_id": "11faae9a-1ccb-4fa5-a8e5-d665939e43e6",
+    "purpose": "Check if new to-do was added successfully",
+    "timestamp": "2026-11-15T07:41:14.753Z"
+  },
+  {
+    "type": "PROGRESS",
+    "run_id": "11faae9a-1ccb-4fa5-a8e5-d665939e43e6",
+    "purpose": "Check if new to-do was added",
+    "timestamp": "2026-11-15T07:41:18.227Z"
+  },
+  {
+    "type": "PROGRESS",
+    "run_id": "11faae9a-1ccb-4fa5-a8e5-d665939e43e6",
+    "purpose": "Enter new to-do title again",
+    "timestamp": "2026-11-15T07:41:22.263Z"
+  },
+  {
+    "type": "PROGRESS",
+    "run_id": "11faae9a-1ccb-4fa5-a8e5-d665939e43e6",
+    "purpose": "Add the new to-do without due date",
+    "timestamp": "2026-11-15T07:41:25.186Z"
+  },
+  {
+    "type": "PROGRESS",
+    "run_id": "11faae9a-1ccb-4fa5-a8e5-d665939e43e6",
+    "purpose": "Submit QA testing findings for to-do app",
+    "timestamp": "2026-11-15T07:41:57.741Z"
+  },
+  {
+    "type": "COMPLETE",
+    "run_id": "11faae9a-1ccb-4fa5-a8e5-d665939e43e6",
+    "status": "COMPLETED",
+    "timestamp": "2026-11-15T07:42:01.494Z",
+    "result": {
+      "findings": [
+        {
+          "page": "Page 1",
+          "action": "Counted to-do items",
+          "expected": "5 to-dos",
+          "actual": "Only 4 to-dos displayed (Buy groceries, Write report, Call dentist, Fix bike). Task stated page 1 should have 5 to-dos but only 4 are shown."
+        },
+        {
+          "page": "Page 1",
+          "action": "Compare Completed counter with ticked boxes",
+          "expected": "Completed counter should match number of checked boxes (2 boxes checked: Buy groceries and Fix bike)",
+          "actual": "Completed counter shows 0, despite 2 items being ticked (checked). The counter does not update to reflect completed items."
+        },
+        {
+          "page": "Page 2",
+          "action": "Click Next to navigate to page 2",
+          "expected": "Display to-do items for page 2",
+          "actual": "Error message displayed: 'Cannot read properties of undefined (reading 'toISOString')'. No to-do items rendered. Completed counter still shows 0."
+        },
+        {
+          "page": "Page 3",
+          "action": "Click Next to navigate to page 3",
+          "expected": "Display to-do items for page 3",
+          "actual": "Same error message: 'Cannot read properties of undefined (reading 'toISOString')'. No to-do items rendered. Completed counter shows 0."
+        },
+        {
+          "page": "Page 1",
+          "action": "Add a to-do with no due date (entered 'Test no due date' and clicked Add)",
+          "expected": "New to-do item should appear in the list",
+          "actual": "The input field was cleared (form submitted), but the new to-do item did not appear in the list. Still shows only the original 4 items."
+        }
+      ],
+      "notes": "QA test summary: Found 4 bugs. Bug 1 - Page 1 only shows 4 to-dos instead of 5. Bug 2 - Completed counter shows 0 despite 2 items being checked. Bug 3 - Pages 2 and 3 show JavaScript error 'Cannot read properties of undefined (reading isToDate)' and render no items. Bug 4 - Adding a to-do with no due date silently fails; the item is not added to the list."
+    }
+  }
+]

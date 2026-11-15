@@ -79,7 +79,8 @@ async function runPlaytestPhase(scan: Scan, liveUrl: string, commitSha: string) 
   };
 
   try {
-    const playPromise = playtest(liveUrl, DEFAULT_GOAL, onEvent, { commitSha });
+    const goal = process.env.PLAYTEST_GOAL || DEFAULT_GOAL;
+    const playPromise = playtest(liveUrl, goal, onEvent, { commitSha });
     const raced = await Promise.race([
       playPromise.then((r) => ({ tag: "done" as const, r })),
       sleep(PLAYTEST_CLIENT_TIMEOUT_MS).then(() => ({ tag: "timeout" as const })),
