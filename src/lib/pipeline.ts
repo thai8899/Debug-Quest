@@ -5,6 +5,7 @@ import { listScans, saveScan } from "./store";
 import { applyPatch, cloneRepo, parseRepoUrl, readSources, run, runTests } from "./repo";
 import { findBugs, type RawBug } from "./gemini";
 import * as gh from "./github";
+import { sendNtfyAlert } from "./notify";
 
 export async function startScan(repoUrl: string): Promise<Scan> {
   const { owner, repo } = parseRepoUrl(repoUrl);
@@ -103,6 +104,14 @@ async function runPipeline(scan: Scan) {
     });
     scan.branch = branch; scan.prUrl = pr.url; scan.prNumber = pr.number;
     scan.status = "done"; scan.step = "Fix locked. Play to unlock.";
+
+    // Phone alert — never await in a way that can break the scan (helper swallows errors).
+    const appBase = (process.env.APP_URL || process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000").replace(/\/$/, "");
+    void sendNtfyAlert({
+      repoName: `${scan.owner}/${scan.repo}`,
+      bugCount: applied.length,
+      scanUrl: `${appBase}/scan/${scan.id}`,
+    });
   } catch (e) {
     scan.status = "error";
     const full = (e instanceof Error ? e.message : String(e)).replaceAll(process.env.GITHUB_TOKEN || "\0", "***");
