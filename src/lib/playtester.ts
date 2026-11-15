@@ -104,15 +104,24 @@ function cacheKey(liveUrl: string, goal: string, commitSha: string) {
     .digest("hex");
 }
 
+function stripBom(text: string) {
+  return text.replace(/^\uFEFF/, "");
+}
+
+function parseJsonFile<T>(path: string): T | null {
+  try {
+    return JSON.parse(stripBom(readFileSync(path, "utf8"))) as T;
+  } catch (e) {
+    console.warn(`[debug-quest] skipping unreadable JSON (${path}):`, e instanceof Error ? e.message : e);
+    return null;
+  }
+}
+
 function readCache(liveUrl: string, goal: string, commitSha: string): PlaytestResult | null {
   const path = join(CACHE_DIR, `${cacheKey(liveUrl, goal, commitSha)}.json`);
   if (!existsSync(path)) return null;
-  try {
-    const entry = JSON.parse(readFileSync(path, "utf8")) as CacheEntry;
-    return entry.result;
-  } catch {
-    return null;
-  }
+  const entry = parseJsonFile<CacheEntry>(path);
+  return entry?.result ?? null;
 }
 
 function writeCache(liveUrl: string, goal: string, commitSha: string, result: PlaytestResult) {
@@ -125,14 +134,14 @@ function writeCache(liveUrl: string, goal: string, commitSha: string, result: Pl
     cachedAt: new Date().toISOString(),
     result,
   };
-  writeFileSync(path, JSON.stringify(entry, null, 2), "utf8");
+  writeFileSync(path, Buffer.from(JSON.stringify(entry, null, 2), "utf8"));
 }
 
 function saveFixture(events: PlaytestEvent[]) {
   mkdirSync(FIXTURES_DIR, { recursive: true });
   const stamp = new Date().toISOString().replace(/[:.]/g, "-");
   const path = join(FIXTURES_DIR, `playtest-${stamp}.json`);
-  writeFileSync(path, JSON.stringify(events, null, 2), "utf8");
+  writeFileSync(path, Buffer.from(JSON.stringify(events, null, 2), "utf8"));
   return path;
 }
 
@@ -199,7 +208,8 @@ async function replayEvents(
 async function mockPlaytest(onEvent: (event: PlaytestEvent) => void): Promise<PlaytestResult> {
   const path = resolveMockFixturePath();
   console.log(`[playtest] MOCK_TINYFISH=true — replaying ${path}`);
-  const events = JSON.parse(readFileSync(path, "utf8")) as PlaytestEvent[];
+  const events = parseJsonFile<PlaytestEvent[]>(path);
+  if (!events) throw new Error(`Unreadable playtest fixture: ${path}`);
   await replayEvents(events, onEvent, 1000);
   return resultFromEvents(events);
 }

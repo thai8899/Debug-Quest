@@ -91,7 +91,8 @@ export default function Home() {
                   >
                     <div style={{ display: "flex", flexWrap: "wrap", gap: 8, alignItems: "center" }}>
                       <span>{b.bugType} in <code>{b.file}</code></span>
-                      {typeof b.findingIndex === "number" && (
+                      {typeof b.findingIndex === "number" &&
+                        scan.playtest?.findings?.[b.findingIndex] != null && (
                         <a
                           href={`#finding-${b.findingIndex}`}
                           style={{
@@ -110,7 +111,11 @@ export default function Home() {
                   </li>
                 ))}
               </ul>
-              <a href={scan.prUrl} target="_blank" style={{ color: "#a29bfe" }}>View pull request (main untouched)</a>
+              {scan.dryRun || !scan.prUrl ? (
+                <p style={{ color: "#ffeaa7", margin: 0 }}>Dry run: PR skipped</p>
+              ) : (
+                <a href={scan.prUrl} target="_blank" style={{ color: "#a29bfe" }}>View pull request (main untouched)</a>
+              )}
             </div>
           )}
         </>

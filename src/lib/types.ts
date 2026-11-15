@@ -78,9 +78,16 @@ export type Scan = {
   branch?: string;
   prUrl?: string;
   prNumber?: number;
+  /** True when DRY_RUN=true — local fixes only, no push/PR. */
+  dryRun?: boolean;
   error?: string;
   /** HEAD commit SHA at scan time; used to skip Gemini on rescans of the same commit. */
   commitSha?: string;
+  /**
+   * Gemini cache key fragment for playtest context: "none" when no findings were used,
+   * otherwise a hash of this scan's playtest findings.
+   */
+  playtestFindingsKey?: string;
   /** Optional live app URL for TinyFish playtesting. */
   liveUrl?: string;
   playtest?: ScanPlaytest;

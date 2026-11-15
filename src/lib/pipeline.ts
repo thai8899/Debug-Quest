@@ -1,4 +1,4 @@
-import { randomUUID } from "crypto";
+import { createHash, randomUUID } from "crypto";
 import { promises as fs } from "fs";
 import type { PlaytestFinding, Scan, ScanPlaytestEvent } from "./types";
 import { listScans, saveScan } from "./store";
@@ -46,6 +46,12 @@ function toScanEvent(event: PlaytestEvent): ScanPlaytestEvent {
 
 function sleep(ms: number) {
   return new Promise((r) => setTimeout(r, ms));
+}
+
+/** Cache key for whether/which playtest findings were fed to Gemini. */
+function playtestFindingsKey(findings: PlaytestFinding[]): string {
+  if (!findings.length) return "none";
+  return createHash("sha256").update(JSON.stringify(findings)).digest("hex");
 }
 
 async function runPlaytestPhase(scan: Scan, liveUrl: string, commitSha: string) {
@@ -169,17 +175,19 @@ async function runPipeline(scan: Scan) {
 
     await step("Gemini is hunting bugs");
 
+    const findingsKey = playtestFindingsKey(findings);
+    scan.playtestFindingsKey = findingsKey;
+
     let raw: RawBug[];
-    const cached = !findings.length
-      ? (await listScans()).find(
-          (s) =>
-            s.id !== scan.id &&
-            s.repoUrl === scan.repoUrl &&
-            s.commitSha === commitSha &&
-            s.status === "done" &&
-            s.bugs.length > 0,
-        )
-      : undefined;
+    const cached = (await listScans()).find(
+      (s) =>
+        s.id !== scan.id &&
+        s.repoUrl === scan.repoUrl &&
+        s.commitSha === commitSha &&
+        (s.playtestFindingsKey ?? "none") === findingsKey &&
+        s.status === "done" &&
+        s.bugs.length > 0,
+    );
     if (cached) {
       console.log("[debug-quest] cache hit");
       raw = cached.bugs.map(({ file, bugType, title, original, replacement, whatWasWrong, whyFixWorks, findingIndex }) => ({
@@ -193,6 +201,11 @@ async function runPipeline(scan: Scan) {
       raw = await findBugs(files, scan.testsBefore, findings);
     }
 
+    // No playtest findings on this scan → never keep a cached/Gemini findingIndex.
+    if (!findings.length) {
+      raw = raw.map((b) => ({ ...b, findingIndex: null }));
+    }
+
     const base = await gh.defaultBranch(scan.owner, scan.repo);
     const branch = `debug-quest/fix-${scan.id}`;
     await run("git", ["checkout", "-b", branch], dir);
@@ -204,7 +217,7 @@ async function runPipeline(scan: Scan) {
         ...b,
         id: `${scan.id}-${i}`,
         applied,
-        findingIndex: b.findingIndex ?? null,
+        findingIndex: findings.length ? (b.findingIndex ?? null) : null,
       });
     }
     const applied = scan.bugs.filter((b) => b.applied);
@@ -213,35 +226,46 @@ async function runPipeline(scan: Scan) {
     await step("Running tests (after)");
     scan.testsAfter = await runTests(dir, false);
 
-    await step("Opening pull request");
     const git = (...a: string[]) => run("git", ["-c", "user.name=Debug Quest", "-c", "user.email=bot@debug-quest.dev", ...a], dir);
     await run("git", ["checkout", "--", "package-lock.json"], dir).catch(() => {});
     await git("add", "-A", ":!node_modules");
     await git("commit", "-m", `Debug Quest: fix ${applied.length} bug(s)`);
+    scan.branch = branch;
 
-    let headOwner = scan.owner;
-    let remote = "origin";
-    if (!(await gh.canPush(scan.owner, scan.repo))) {
-      const me = await gh.whoami();
-      await gh.ensureFork(scan.owner, scan.repo, me);
-      headOwner = me;
-      remote = "fork";
-      await git("remote", "add", "fork", `https://x-access-token:${token}@github.com/${me}/${scan.repo}.git`);
+    const dryRun = process.env.DRY_RUN === "true";
+    if (dryRun) {
+      scan.dryRun = true;
+      console.log("[debug-quest] DRY_RUN=true — skipping push and PR");
+      scan.status = "done";
+      scan.step = "Dry run: PR skipped";
+    } else {
+      await step("Opening pull request");
+      let headOwner = scan.owner;
+      let remote = "origin";
+      if (!(await gh.canPush(scan.owner, scan.repo))) {
+        const me = await gh.whoami();
+        await gh.ensureFork(scan.owner, scan.repo, me);
+        headOwner = me;
+        remote = "fork";
+        await git("remote", "add", "fork", `https://x-access-token:${token}@github.com/${me}/${scan.repo}.git`);
+      }
+      const push = await git("push", remote, branch);
+      if (push.code !== 0) throw new Error("git push failed: " + push.out.replaceAll(token, "***").slice(0, 300));
+
+      const t = scan.testsAfter, b = scan.testsBefore;
+      const testLine = b.ran && t?.ran ? `Tests: ${b.failing ?? "?"} failing -> ${t.failing ?? "?"} failing (\`${t.command}\`)` : "No test suite detected.";
+      const pr = await gh.openPr({
+        owner: scan.owner, repo: scan.repo, base,
+        head: headOwner === scan.owner ? branch : `${headOwner}:${branch}`,
+        title: `Debug Quest: ${applied.length} bug fix(es)`,
+        body: `Automated fixes by Debug Quest (Gemini). \`${base}\` is untouched.\n\n${testLine}\n\n` +
+          applied.map((x) => `- **${x.title}** (\`${x.file}\`, ${x.bugType})`).join("\n"),
+      });
+      scan.prUrl = pr.url;
+      scan.prNumber = pr.number;
+      scan.status = "done";
+      scan.step = "Fix locked. Play to unlock.";
     }
-    const push = await git("push", remote, branch);
-    if (push.code !== 0) throw new Error("git push failed: " + push.out.replaceAll(token, "***").slice(0, 300));
-
-    const t = scan.testsAfter, b = scan.testsBefore;
-    const testLine = b.ran && t?.ran ? `Tests: ${b.failing ?? "?"} failing -> ${t.failing ?? "?"} failing (\`${t.command}\`)` : "No test suite detected.";
-    const pr = await gh.openPr({
-      owner: scan.owner, repo: scan.repo, base,
-      head: headOwner === scan.owner ? branch : `${headOwner}:${branch}`,
-      title: `Debug Quest: ${applied.length} bug fix(es)`,
-      body: `Automated fixes by Debug Quest (Gemini). \`${base}\` is untouched.\n\n${testLine}\n\n` +
-        applied.map((x) => `- **${x.title}** (\`${x.file}\`, ${x.bugType})`).join("\n"),
-    });
-    scan.branch = branch; scan.prUrl = pr.url; scan.prNumber = pr.number;
-    scan.status = "done"; scan.step = "Fix locked. Play to unlock.";
   } catch (e) {
     scan.status = "error";
     const full = (e instanceof Error ? e.message : String(e)).replaceAll(process.env.GITHUB_TOKEN || "\0", "***");
