@@ -125,6 +125,9 @@ Return JSON: { "symptom", "guards": [ids], "stations": [ { "line", "code", "haza
     const parsed = JSON.parse(res.text ?? "{}");
     for (const s of parsed.stations ?? []) if (!s.hazard) delete s.hazard;
     if (!valid(parsed)) throw new Error("bad level shape");
+    // Every board line must really come from the bug's code; Gemini sometimes invents extra "context".
+    const real = new Set(bug.originalCode.split("\n").map((l) => l.trim()).filter(Boolean));
+    if (!parsed.stations.every((st: { code: string }) => real.has(st.code.trim()))) throw new Error("level used code that is not in the bug");
     return norm(parsed, bug.id);
   } catch (e) {
     console.warn("[game] Gemini level failed, using heuristic:", e instanceof Error ? e.message.slice(0, 200) : e);

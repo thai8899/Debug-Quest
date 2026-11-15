@@ -35,14 +35,14 @@ export default function ScanPage() {
         <div className="mt-10 flex flex-col items-center gap-4 text-center">
           <Mascot size={96} mood="run" />
           <div className="font-display text-2xl font-bold">Scanning repository</div>
-          <p className="text-sm text-[#ede8dc]/60">Gemini is reading the code and running the tests.</p>
+          <p className="text-sm text-[#ede8dc]/70">{scan?.step ?? "Gemini is reading the code and running the tests."}</p>
           <div className="h-1.5 w-72 overflow-hidden rounded-full bg-white/10">
             <motion.div className="h-full w-1/3 bg-accent" animate={{ x: [-100, 260] }} transition={{ repeat: Infinity, duration: 1.3, ease: "easeInOut" }} />
           </div>
         </div>
       </Shell>
     );
-  if (scan.status === "error") return <Shell><p className="text-sev-high">The scan failed. Try another repository.</p></Shell>;
+  if (scan.status === "error") return <Shell><p role="alert" className="text-sev-high">The scan failed. {scan.error ?? "Try another repository."}</p></Shell>;
 
   const locked = scan.bugs.filter((b) => b.locked).length;
   const stat = "rounded-md border border-line bg-panel p-4";

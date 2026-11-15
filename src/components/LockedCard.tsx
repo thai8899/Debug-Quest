@@ -15,7 +15,7 @@ export default function LockedCard({ bug }: { bug: PublicBug }) {
       </div>
       <div>
         <div className="break-all font-mono text-sm">{bug.file}</div>
-        <div className="text-xs text-[#ede8dc]/50">lines {bug.lineStart} to {bug.lineEnd}</div>
+        <div className="text-xs text-[#ede8dc]/50">{bug.lineRelative ? `${bug.lineEnd} line snippet` : `lines ${bug.lineStart} to ${bug.lineEnd}`}</div>
       </div>
       <span className="w-fit rounded-sm bg-white/5 px-2 py-0.5 font-mono text-xs text-[#ede8dc]/80">{bug.category}</span>
       <Link href={`/play/${bug.id}`}
