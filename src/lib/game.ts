@@ -120,7 +120,7 @@ Return JSON: { "symptom", "guards": [ids], "stations": [ { "line", "code", "haza
           },
         },
       }),
-      new Promise<never>((_, rej) => setTimeout(() => rej(new Error("timeout")), 25_000)),
+      new Promise<never>((_, rej) => setTimeout(() => rej(new Error("timeout")), Number(process.env.LEVEL_TIMEOUT_MS) || 8_000)),
     ]);
     const parsed = JSON.parse(res.text ?? "{}");
     for (const s of parsed.stations ?? []) if (!s.hazard) delete s.hazard;
@@ -135,12 +135,22 @@ Return JSON: { "symptom", "guards": [ids], "stations": [ { "line", "code", "haza
   }
 }
 
+// One build per bug at a time: prepareLevels() in the background and a player pressing Play share the same Gemini call.
+const building = ((globalThis as unknown as { __dqBuilding?: Map<string, Promise<Level>> }).__dqBuilding ??= new Map<string, Promise<Level>>());
+
 export async function getOrMakeLevel(bug: Bug): Promise<Level> {
   const existing = await getLevel(bug.id);
   if (existing) return existing;
-  const level = await makeLevel(bug);
-  await saveLevel(level);
-  return level;
+  let job = building.get(bug.id);
+  if (!job) {
+    job = (async () => {
+      const level = await makeLevel(bug);
+      await saveLevel(level);
+      return level;
+    })().finally(() => building.delete(bug.id));
+    building.set(bug.id, job);
+  }
+  return job;
 }
 
 // Call from the scan pipeline right after bugs are saved so levels are ready when the user opens them.
