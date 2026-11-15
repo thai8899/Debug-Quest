@@ -9,6 +9,7 @@
     "start": "next start",
     "lint": "next lint",
     "seed": "npx tsx scripts/seed.ts",
+    "test:mock": "npx tsx scripts/mock-env-check.ts",
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
