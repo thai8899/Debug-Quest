@@ -6,23 +6,44 @@ import type { TestFailure, TestResult } from "./types";
 
 type RunResult = { code: number; out: string };
 
-export function run(cmd: string, args: string[], cwd: string, timeoutMs = 120_000): Promise<RunResult> {
+export function run(
+  cmd: string,
+  args: string[],
+  cwd: string,
+  timeoutMs = 120_000,
+  envExtra?: NodeJS.ProcessEnv,
+): Promise<RunResult> {
   return new Promise((resolve) => {
     // Always argv array, never a shell string — spaces in args like user.name=Debug Quest stay intact.
-    execFile(cmd, args, { cwd, timeout: timeoutMs, maxBuffer: 10 * 1024 * 1024, env: { ...process.env, CI: "1", FORCE_COLOR: "0", NO_COLOR: "1" } }, (err, stdout, stderr) => {
-      const code = err ? (typeof (err as NodeJS.ErrnoException).code === "number" ? ((err as unknown as { code: number }).code) : 1) : 0;
-      const out = `${stdout}\n${stderr}`.trim() || (err ? String(err.message || err) : "");
-      resolve({ code, out });
-    });
+    execFile(
+      cmd,
+      args,
+      {
+        cwd,
+        timeout: timeoutMs,
+        maxBuffer: 10 * 1024 * 1024,
+        env: { ...process.env, CI: "1", FORCE_COLOR: "0", NO_COLOR: "1", ...envExtra },
+      },
+      (err, stdout, stderr) => {
+        const code = err ? (typeof (err as NodeJS.ErrnoException).code === "number" ? ((err as unknown as { code: number }).code) : 1) : 0;
+        const out = `${stdout}\n${stderr}`.trim() || (err ? String(err.message || err) : "");
+        resolve({ code, out });
+      },
+    );
   });
 }
 
 /** On win32, execFile("npm.cmd") fails with EINVAL — invoke npm via cmd.exe /c instead. */
-function runNpm(args: string[], cwd: string, timeoutMs = 120_000): Promise<RunResult> {
+function runNpm(
+  args: string[],
+  cwd: string,
+  timeoutMs = 120_000,
+  envExtra?: NodeJS.ProcessEnv,
+): Promise<RunResult> {
   if (process.platform === "win32") {
-    return run("cmd.exe", ["/d", "/s", "/c", "npm", ...args], cwd, timeoutMs);
+    return run("cmd.exe", ["/d", "/s", "/c", "npm", ...args], cwd, timeoutMs, envExtra);
   }
-  return run("npm", args, cwd, timeoutMs);
+  return run("npm", args, cwd, timeoutMs, envExtra);
 }
 
 export function parseRepoUrl(url: string) {
@@ -118,13 +139,16 @@ export function parseFailures(out: string): TestFailure[] {
   return failures;
 }
 
+const DEV_ENV: NodeJS.ProcessEnv = { NODE_ENV: "development" };
+
 async function installDeps(dir: string) {
   const hasLock = (await exists(path.join(dir, "package-lock.json")))
     || (await exists(path.join(dir, "npm-shrinkwrap.json")));
+  // Host may run with NODE_ENV=production; still install the clone's test tooling (jest, etc.).
   const args = hasLock
-    ? ["ci", "--no-audit", "--no-fund"]
-    : ["install", "--no-audit", "--no-fund"];
-  const r = await runNpm(args, dir, 180_000);
+    ? ["ci", "--include=dev", "--no-audit", "--no-fund"]
+    : ["install", "--include=dev", "--no-audit", "--no-fund"];
+  const r = await runNpm(args, dir, 180_000, DEV_ENV);
   if (r.code !== 0) {
     console.warn("[debug-quest] npm install failed:\n" + r.out.slice(-2000));
   }
@@ -138,7 +162,7 @@ export async function runTests(dir: string, install: boolean): Promise<TestResul
     if (pkg.scripts?.test && !/no test specified/.test(pkg.scripts.test)) {
       if (install) await installDeps(dir);
       command = "npm test";
-      r = await runNpm(["test"], dir);
+      r = await runNpm(["test"], dir, 120_000, DEV_ENV);
     }
   }
   if (!r && ((await exists(path.join(dir, "pytest.ini"))) || (await exists(path.join(dir, "tests"))) || (await exists(path.join(dir, "pyproject.toml"))))) {

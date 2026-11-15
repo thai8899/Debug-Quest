@@ -25,6 +25,7 @@ export async function toContractBug(scan: RawScan, b: RawBug): Promise<Bug> {
     id: b.id, scanId: scan.id, file: b.file, category: b.bugType, severity: sevOf(b.bugType),
     explainSimple: `${b.whatWasWrong} ${b.whyFixWorks}`.trim(), explainDeep: `${b.whatWasWrong}\n\n${b.whyFixWorks}`,
     sources: [] as string[], locked: true,
+    findingIndex: b.findingIndex ?? null,
   };
   const content = await fileAt(scan.owner, scan.repo, b.file, scan.commitSha);
   const at = content ? content.indexOf(b.original) : -1;
