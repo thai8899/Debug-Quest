@@ -1,14 +1,11 @@
 import { NextResponse } from 'next/server';
-import { getPool } from '@/lib/tiger';
+import { pool } from '@/lib/tiger';
 
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
   const userId = searchParams.get('userId') || 'demo';
 
   try {
-    // Resolve DB only when this route runs — never at module import / build time.
-    const pool = getPool();
-
     // 1. XP Total + level
     const xpRes = await pool.query(
       'SELECT COALESCE(SUM(xp), 0) AS total FROM xp_events WHERE user_id = $1',
