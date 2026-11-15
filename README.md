@@ -4,9 +4,28 @@
 
 AI coding tools fix bugs faster than people can understand them. Debug Quest keeps the speed and puts the understanding back: the AI fixes your bugs, then locks each fix behind a short arcade game built from the bug itself. You unlock the plain-English explanation by playing, and you earn XP for it.
 
-Built for SunHacks 2026 by Oluwafemi Omotowa, Punarva, Harshitha and Deepika.
+Built at sunhacks 2026 by Oluwafemi (Phemmy) Omotowa, Punarva, Harshitha and Deepika.
 
-Live demo: http://45.32.72.253:3000
+**Live demo:** http://45.32.72.253:3000 · **Demo app with planted bugs:** http://45.32.72.253:4000 ([code](https://github.com/DeepikaAmudala17/dq-demo-app))
+
+## Try it in one minute
+
+1. Open the live demo.
+2. Paste `https://github.com/DeepikaAmudala17/dq-demo-app` as the repo and `http://45.32.72.253:4000` as the live app URL.
+3. Click **Scan repo**, watch the Playtester's findings, then pick a locked bug and play to unlock it.
+
+The public server runs in dry-run mode, so it shows the fixes without opening a pull request on the demo repo.
+
+## Results
+
+We planted five realistic bugs in a small Express + TypeScript to-do app (an off-by-one in pagination, a missing null check, an un-awaited async call, a `==` vs `===` bug, and an unclosed file handle). Four of its tests fail out of the box.
+
+| Scan | Bugs found | Tests |
+| --- | --- | --- |
+| Code only | 3 of 5 | 4 failing → 1 failing |
+| Code + TinyFish Playtester | **5 of 5** | **4 failing → 0 failing** |
+
+Some bugs only show up when the app runs. The Playtester's findings gave Gemini the clues it needed to catch both of the bugs that reading the code alone missed.
 
 ## How it works
 
@@ -32,8 +51,9 @@ Grading happens only on the server. The browser sees code lines and sends taps, 
 - **App:** Next.js 16 (App Router), React 19, TypeScript, Tailwind CSS 4, framer-motion
 - **AI:** Gemini for finding and fixing bugs, and for tracing playtest findings to code
 - **Playtester:** TinyFish browser agent
-- **Data:** MongoDB Atlas for scans and bugs, Tiger Data for the XP timeline
-- **Alerts:** ntfy phone and Discord notifications (coming)
+- **Data:** MongoDB Atlas for bugs, game levels, quizzes and unlock state; Tiger Data for the XP timeline
+- **Alerts:** ntfy phone notifications and Discord alerts (built on branches, being merged)
+- **Built with:** Cursor (Agent mode) and Grok Bot
 - **Hosting:** Vultr, run with pm2
 
 ## Run it locally
