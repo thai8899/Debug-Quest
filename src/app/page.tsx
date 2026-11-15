@@ -15,6 +15,7 @@ const STEPS = [
 export default function Home() {
   const router = useRouter();
   const [url, setUrl] = useState("");
+  const [liveUrl, setLiveUrl] = useState("");
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState("");
 
@@ -22,7 +23,7 @@ export default function Home() {
     e.preventDefault();
     setErr(""); setBusy(true);
     try {
-      const r = await fetch("/api/scan", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ repoUrl: url.trim() }) });
+      const r = await fetch("/api/scan", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ repoUrl: url.trim(), ...(liveUrl.trim() ? { liveUrl: liveUrl.trim() } : {}) }) });
       const j = await r.json();
       if (!r.ok) throw new Error(j.error ?? "Could not start the scan.");
       router.push(`/scan/${j.id}`);
@@ -48,6 +49,8 @@ export default function Home() {
             {busy ? <><Loader2 size={16} className="animate-spin" /> Starting</> : "Scan repo"}
           </button>
         </form>
+        <input value={liveUrl} onChange={(e) => setLiveUrl(e.target.value)} placeholder="Live app URL (optional, for the AI playtester)" aria-label="Live app URL (optional)" autoComplete="off"
+          className="w-full max-w-2xl rounded-md border border-white/25 bg-[#1b2670]/70 px-4 py-3 font-mono text-sm text-[#f7f3e8] placeholder:text-[#f7f3e8]/45 outline-none focus:border-accent" />
         {err && <p role="alert" className="text-sm text-sev-high">{err}</p>}
         <Link href="/scan/demo" className="text-sm text-sev-low hover:underline">No repo handy? Try the demo</Link>
       </section>

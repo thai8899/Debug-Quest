@@ -36,6 +36,7 @@ export type Scan = {
   bugs: PublicBug[];
   step?: string;
   error?: string;
+  playtest?: import("./types").ScanPlaytest;
 };
 
 export type QuestionType = "spot-the-line" | "predict" | "pick-the-fix";

@@ -8,6 +8,7 @@ import LockedCard from "@/components/LockedCard";
 import Mascot from "@/components/Mascot";
 import SpeechBubble from "@/components/SpeechBubble";
 import Logo from "@/components/Logo";
+import { PlaytesterPanel } from "@/components/PlaytesterPanel";
 
 export default function ScanPage() {
   const { id } = useParams<{ id: string }>();
@@ -76,6 +77,7 @@ export default function ScanPage() {
         </div>
       </div>
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+        {scan.playtest && <div className="sm:col-span-full"><PlaytesterPanel playtest={scan.playtest} /></div>}
         {scan.bugs.map((b) => <LockedCard key={b.id} bug={b} />)}
       </div>
     </Shell>

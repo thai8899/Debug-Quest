@@ -67,7 +67,7 @@ export async function loadGameScan(id: string): Promise<Scan | null> {
   const raw = await getScan(id);
   if (!raw) return null;
   const scan: Scan = {
-    id: raw.id, repoUrl: raw.repoUrl, status: raw.status, step: raw.step, error: raw.error,
+    id: raw.id, repoUrl: raw.repoUrl, status: raw.status, step: raw.step, error: raw.error, playtest: raw.playtest,
     fixBranch: raw.branch, prUrl: raw.prUrl, testsBefore: counts(raw.testsBefore), testsAfter: counts(raw.testsAfter), bugs: [],
   };
   if (raw.status !== "done") return scan;
