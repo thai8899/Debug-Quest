@@ -1,9 +1,9 @@
 import { randomUUID } from "crypto";
 import { promises as fs } from "fs";
 import type { Scan } from "./types";
-import { saveScan } from "./store";
+import { listScans, saveScan } from "./store";
 import { applyPatch, cloneRepo, parseRepoUrl, readSources, run, runTests } from "./repo";
-import { findBugs } from "./gemini";
+import { findBugs, type RawBug } from "./gemini";
 import * as gh from "./github";
 
 export async function startScan(repoUrl: string): Promise<Scan> {
@@ -34,9 +34,30 @@ async function runPipeline(scan: Scan) {
     scan.testsBefore = await runTests(dir, true);
 
     await step("Gemini is hunting bugs");
-    const files = await readSources(dir);
-    if (!files.length) throw new Error("No source files found");
-    const raw = await findBugs(files, scan.testsBefore);
+    const commitSha = (await run("git", ["rev-parse", "HEAD"], dir)).out.trim();
+    scan.commitSha = commitSha;
+
+    let raw: RawBug[];
+    const cached = (await listScans()).find(
+      (s) =>
+        s.id !== scan.id &&
+        s.repoUrl === scan.repoUrl &&
+        s.commitSha === commitSha &&
+        s.status === "done" &&
+        s.bugs.length > 0,
+    );
+    if (cached) {
+      console.log("[debug-quest] cache hit");
+      raw = cached.bugs.map(({ file, bugType, title, original, replacement, whatWasWrong, whyFixWorks }) => ({
+        file, bugType, title, original, replacement, whatWasWrong, whyFixWorks,
+      }));
+    } else {
+      console.log("[debug-quest] cache miss");
+      const files = await readSources(dir);
+      if (!files.length) throw new Error("No source files found");
+      console.log(`[debug-quest] sending ${files.length} file(s) to Gemini: ${files.map((f) => f.path).join(", ")}`);
+      raw = await findBugs(files, scan.testsBefore);
+    }
 
     const base = await gh.defaultBranch(scan.owner, scan.repo);
     const branch = `debug-quest/fix-${scan.id}`;
@@ -84,7 +105,13 @@ async function runPipeline(scan: Scan) {
     scan.status = "done"; scan.step = "Fix locked. Play to unlock.";
   } catch (e) {
     scan.status = "error";
-    scan.error = (e instanceof Error ? e.message : String(e)).replaceAll(process.env.GITHUB_TOKEN || "\0", "***");
+    const full = (e instanceof Error ? e.message : String(e)).replaceAll(process.env.GITHUB_TOKEN || "\0", "***");
+    console.error("[debug-quest] scan error:", full);
+    if (/429|RESOURCE_EXHAUSTED/.test(full)) {
+      scan.error = "Gemini's daily limit is reached. Try again later or switch API key.";
+    } else {
+      scan.error = full.split("\n")[0].slice(0, 200);
+    }
   } finally {
     await saveScan(scan);
     if (dir) await fs.rm(dir, { recursive: true, force: true }).catch(() => {});

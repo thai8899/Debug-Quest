@@ -14,6 +14,7 @@ export type RawBug = {
 const PROMPT = `You are a senior engineer reviewing a repository for real bugs.
 Find genuine defects (logic errors, off-by-one, null/undefined handling, wrong operators, bad async handling, security issues).
 Ignore style nits. If tests are failing, prioritise the bugs that cause those failures.
+Check especially for: non-null assertions (!) on optional values, files/handles/connections that are opened but never closed, un-awaited promises, off-by-one ranges, and == comparisons between different types.
 For each bug return the smallest possible patch:
 - "original": an EXACT, verbatim snippet from the file (copy whitespace precisely) that appears exactly once in that file.
 - "replacement": the corrected snippet.
@@ -21,10 +22,33 @@ For each bug return the smallest possible patch:
 - "whatWasWrong" and "whyFixWorks": plain English for a student, 1-2 sentences each.
 Return at most 5 bugs. Return an empty list if the code is fine.`;
 
+function formatFailingTests(tests: TestResult): string {
+  if (!tests.ran) return "No tests detected.";
+  const lines = [
+    `Test command: ${tests.command}`,
+    `Summary: ${tests.failing ?? "?"} failing, ${tests.passing ?? "?"} passing`,
+  ];
+  const failures = tests.failures?.length
+    ? tests.failures
+    : [];
+  if (failures.length) {
+    lines.push("These tests currently fail:");
+    for (const f of failures) {
+      lines.push(`- ${f.name}${f.message ? `: ${f.message}` : ""}`);
+    }
+    lines.push(
+      "Every failing test should be explained by a bug you report, unless the test itself is wrong.",
+    );
+  } else if (tests.output) {
+    lines.push(`Output tail:\n${tests.output}`);
+  }
+  return lines.join("\n");
+}
+
 export async function findBugs(files: { path: string; content: string }[], tests: TestResult): Promise<RawBug[]> {
   const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY, httpOptions: { apiVersion: "v1beta" } });
   const code = files.map((f) => `=== FILE: ${f.path} ===\n${f.content}`).join("\n\n");
-  const testInfo = tests.ran ? `Test command: ${tests.command}\nFailing: ${tests.failing}\nOutput tail:\n${tests.output}` : "No tests detected.";
+  const testInfo = formatFailingTests(tests);
   const res = await ai.models.generateContent({
     model: process.env.GEMINI_MODEL || "gemini-3-flash-preview",
     contents: `${PROMPT}\n\n${testInfo}\n\n${code}`,
