@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { sendNtfyAlert } from "@/lib/notify";
+import { sendScanAlert } from "@/lib/notify";
 
 export async function POST(request: Request) {
   let repoName = "";
@@ -22,7 +22,7 @@ export async function POST(request: Request) {
     );
   }
 
-  // Never let ntfy failures surface as a 500 — alerts are best-effort.
-  await sendNtfyAlert({ repoName, bugCount, scanUrl });
+  // Best-effort alerts — never fail the HTTP request because Discord/ntfy failed.
+  await sendScanAlert({ repoName, bugCount, scanUrl });
   return NextResponse.json({ ok: true });
 }
