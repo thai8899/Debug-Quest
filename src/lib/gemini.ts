@@ -1,5 +1,5 @@
 import { GoogleGenAI, Type } from "@google/genai";
-import type { TestResult } from "./types";
+import type { PlaytestFinding, TestResult } from "./types";
 
 export type RawBug = {
   file: string;
@@ -9,6 +9,7 @@ export type RawBug = {
   replacement: string;
   whatWasWrong: string;
   whyFixWorks: string;
+  findingIndex?: number | null;
 };
 
 const PROMPT = `You are a senior engineer reviewing a repository for real bugs.
@@ -20,6 +21,7 @@ For each bug return the smallest possible patch:
 - "replacement": the corrected snippet.
 - "bugType": a short category such as off-by-one, null-handling, wrong-operator, async, security, logic.
 - "whatWasWrong" and "whyFixWorks": plain English for a student, 1-2 sentences each.
+- "findingIndex": if a QA finding below is explained by this bug, the 0-based index of that finding; otherwise null.
 Return at most 5 bugs. Return an empty list if the code is fine.`;
 
 function formatFailingTests(tests: TestResult): string {
@@ -45,13 +47,35 @@ function formatFailingTests(tests: TestResult): string {
   return lines.join("\n");
 }
 
-export async function findBugs(files: { path: string; content: string }[], tests: TestResult): Promise<RawBug[]> {
+function formatFindings(findings: PlaytestFinding[]): string {
+  if (!findings.length) return "";
+  const lines = [
+    "A QA agent used the live app and reported these problems. Treat them as clues, not facts:",
+    "some may be the agent's own mistakes (e.g. it single-clicked where a double-click was needed).",
+    "Only report a bug if you can point to code that causes it.",
+    "",
+    "Findings:",
+  ];
+  findings.forEach((f, i) => {
+    lines.push(
+      `[${i}] page=${f.page} | action=${f.action} | expected=${f.expected} | actual=${f.actual}`,
+    );
+  });
+  return lines.join("\n");
+}
+
+export async function findBugs(
+  files: { path: string; content: string }[],
+  tests: TestResult,
+  findings: PlaytestFinding[] = [],
+): Promise<RawBug[]> {
   const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY, httpOptions: { apiVersion: "v1beta" } });
   const code = files.map((f) => `=== FILE: ${f.path} ===\n${f.content}`).join("\n\n");
   const testInfo = formatFailingTests(tests);
+  const qaInfo = formatFindings(findings);
   const res = await ai.models.generateContent({
     model: process.env.GEMINI_MODEL || "gemini-3-flash-preview",
-    contents: `${PROMPT}\n\n${testInfo}\n\n${code}`,
+    contents: `${PROMPT}\n\n${testInfo}\n\n${qaInfo ? qaInfo + "\n\n" : ""}${code}`,
     config: {
       responseMimeType: "application/json",
       responseSchema: {
@@ -69,8 +93,9 @@ export async function findBugs(files: { path: string; content: string }[], tests
                 replacement: { type: Type.STRING },
                 whatWasWrong: { type: Type.STRING },
                 whyFixWorks: { type: Type.STRING },
+                findingIndex: { type: Type.NUMBER, nullable: true },
               },
-              required: ["file", "bugType", "title", "original", "replacement", "whatWasWrong", "whyFixWorks"],
+              required: ["file", "bugType", "title", "original", "replacement", "whatWasWrong", "whyFixWorks", "findingIndex"],
             },
           },
         },

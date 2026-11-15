@@ -441,16 +441,42 @@ async function realPlaytest(
   };
 }
 
+export type PlaytestOptions = {
+  /** Cache key commit — prefer the scanned repo's HEAD, not this project's. */
+  commitSha?: string;
+};
+
+export function extractFindings(result: unknown): {
+  findings: { page: string; action: string; expected: string; actual: string }[];
+  notes?: string;
+} {
+  if (!result || typeof result !== "object") return { findings: [] };
+  const r = result as { findings?: unknown; notes?: unknown };
+  const findings = Array.isArray(r.findings)
+    ? r.findings
+        .filter((f): f is Record<string, unknown> => !!f && typeof f === "object")
+        .map((f) => ({
+          page: String(f.page ?? ""),
+          action: String(f.action ?? ""),
+          expected: String(f.expected ?? ""),
+          actual: String(f.actual ?? ""),
+        }))
+    : [];
+  const notes = typeof r.notes === "string" ? r.notes : undefined;
+  return { findings, notes };
+}
+
 export async function playtest(
   liveUrl: string,
   goal: string,
   onEvent: (event: PlaytestEvent) => void,
+  options?: PlaytestOptions,
 ): Promise<PlaytestResult> {
   if (process.env.MOCK_TINYFISH === "true") {
     return mockPlaytest(onEvent);
   }
 
-  const commitSha = repoCommitSha();
+  const commitSha = options?.commitSha || repoCommitSha();
   const cached = readCache(liveUrl, goal, commitSha);
   if (cached) {
     console.log(`[playtest] cache hit for commit ${commitSha.slice(0, 7)}`);
