@@ -26,7 +26,7 @@ Note: scans run the target repo's test suite on the server. Only scan repos you 
 - Stand-ins to swap once teammates push: `src/lib/data.ts` -> Harshitha's `lib/mongo.ts`, `src/lib/xp.ts` -> `lib/tiger.ts`, `src/app/api/scan/[id]/route.ts` -> Punarva's real route.
 - Punarva: call `prepareQuizzes(bugs)` from `src/lib/quiz.ts` after saving a scan's bugs so quizzes are ready.
 
-## Unlock game: "Trap the bug" (Phemmy's lane)
+## Unlock game: "Bug Chomp" (Phemmy's lane)
 
 Replaces the quiz as the main unlock flow (the old `/quiz/[bugId]` screen and `/api/quiz/*` routes still work).
 

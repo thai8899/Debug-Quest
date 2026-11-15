@@ -29,3 +29,11 @@ export type TraceStep = { stationId: string; result: "clear" | "caught" | "crash
 export type RunResult =
   | { passed: true; trace: TraceStep[]; stars: number; xpEarned: number; spent: number; review: { line: number; why: string }[] }
   | { passed: false; trace: TraceStep[]; crashedAt: string; crash: string; hint?: string; fails: number };
+
+// ---- Bug Chomp (arcade mode) ----
+// Ghosts pop out of holes carrying one line of code. The player chomps the buggy ones.
+export type PublicSpawn = { id: number; hole: number; at: number; show: number; stationId: string; line: number; code: string };
+export type ArcadeStart = { token: string; durationMs: number; leadMs: number; lives: number; goal: number; spawns: PublicSpawn[] };
+export type ArcadeResult =
+  | { passed: true; stars: number; xpEarned: number; caught: number; total: number; wrong: number; review: { line: number; why: string }[] }
+  | { passed: false; caught: number; total: number; wrong: number; outOfLives: boolean; crash: string; hint?: string; fails: number };

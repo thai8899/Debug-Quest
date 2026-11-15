@@ -101,3 +101,18 @@ body {
 @keyframes bob { from { transform: translateY(-14px); } to { transform: translateY(14px); } }
 @media (prefers-reduced-motion: reduce) { .cube, .bob { animation: none; } .plane { transition: none; } }
 @media (max-width: 719px) { .plane { --tilt: 10deg; } }
+
+/* ---- Bug Chomp (arcade) ---- */
+.chomper { background: radial-gradient(circle at 35% 30%, #fff4a8, #ffd23a 55%, #f0a500); border-radius: 9999px; position: relative; animation: chomp .24s steps(1) infinite alternate; box-shadow: 0 4px 0 #a86a00, 0 10px 16px rgba(3,8,40,.45); }
+.chomper::after { content: ""; position: absolute; width: 13%; height: 13%; border-radius: 9999px; background: #2a1a00; top: 20%; left: 46%; }
+@keyframes chomp {
+  from { clip-path: polygon(50% 50%, 100% 18%, 100% 0, 0 0, 0 100%, 100% 100%, 100% 82%); }
+  to { clip-path: polygon(50% 50%, 100% 48%, 100% 0, 0 0, 0 100%, 100% 100%, 100% 52%); }
+}
+.ghost3d { position: relative; box-shadow: inset 0 -8px 0 rgba(0,0,0,.14), inset 0 3px 0 rgba(255,255,255,.4), 0 6px 0 rgba(3,8,40,.35); }
+.ghost3d::after { content: ""; position: absolute; left: 0; right: 0; bottom: -9px; height: 10px; background: radial-gradient(circle at 11px 0, var(--g) 10px, transparent 11px) repeat-x; background-size: 22px 10px; filter: brightness(.92); }
+.hole-back { background: radial-gradient(ellipse at 50% 40%, #05082a 30%, #0d1450 70%); box-shadow: inset 0 6px 10px rgba(0,0,0,.7), 0 3px 0 rgba(255,255,255,.14); }
+.hole-lip { background: linear-gradient(180deg, #5a6bd6, #3a47a8); box-shadow: 0 4px 0 #1b2370, inset 0 2px 0 rgba(255,255,255,.3); }
+@keyframes shakeit { 0%,100% { transform: translateX(0); } 25% { transform: translateX(-7px); } 75% { transform: translateX(7px); } }
+.shake { animation: shakeit .3s ease; }
+@media (prefers-reduced-motion: reduce) { .chomper { animation: none; } .shake { animation: none; } }
