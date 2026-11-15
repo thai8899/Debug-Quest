@@ -7,12 +7,15 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
+    "lint": "next lint",
+    "seed": "npx tsx scripts/seed.ts",
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
     "@google/genai": "^3.3.0",
     "@tailwindcss/postcss": "^4.3.5",
     "canvas-confetti": "^1.9.4",
+    "dotenv": "^18.0.10",
     "framer-motion": "^14.14.0",
     "lucide-react": "^1.73.0",
     "mongodb": "^7.9.0",
@@ -22,6 +25,7 @@
     "react": "^19.3.1",
     "react-dom": "^19.3.1",
     "react-syntax-highlighter": "^16.1.2",
+    "recharts": "^3.10.1",
     "tailwindcss": "^4.3.5"
   },
   "devDependencies": {
