@@ -148,6 +148,23 @@ function newestFixturePath(): string {
   return join(FIXTURES_DIR, names[names.length - 1]!);
 }
 
+function resolveMockFixturePath(): string {
+  const named = process.env.MOCK_TINYFISH_FIXTURE?.trim();
+  if (!named) return newestFixturePath();
+  const candidates = [
+    named,
+    join(process.cwd(), named),
+    join(FIXTURES_DIR, named),
+    join(FIXTURES_DIR, named.endsWith(".json") ? named : `${named}.json`),
+  ];
+  for (const path of candidates) {
+    if (existsSync(path)) return path;
+  }
+  throw new Error(
+    `MOCK_TINYFISH_FIXTURE not found: ${named} (looked in fixtures/ and cwd)`,
+  );
+}
+
 function resultFromEvents(events: PlaytestEvent[]): PlaytestResult {
   const complete = [...events].reverse().find((e) => e.type === "COMPLETE") as
     | (PlaytestEvent & { type: "COMPLETE" })
@@ -180,7 +197,7 @@ async function replayEvents(
 }
 
 async function mockPlaytest(onEvent: (event: PlaytestEvent) => void): Promise<PlaytestResult> {
-  const path = newestFixturePath();
+  const path = resolveMockFixturePath();
   console.log(`[playtest] MOCK_TINYFISH=true — replaying ${path}`);
   const events = JSON.parse(readFileSync(path, "utf8")) as PlaytestEvent[];
   await replayEvents(events, onEvent, 1000);
@@ -349,6 +366,8 @@ async function realPlaytest(
     goal,
     output_schema: OUTPUT_SCHEMA,
     agent_config: { max_duration_seconds: 180 },
+    // Required for GET /v1/runs/{id}/steps/{stepId}/screenshot and steps[].screenshot
+    capture_config: { screenshots: true },
   };
   console.log("[playtest] request body:", JSON.stringify(requestBody, null, 2));
 
@@ -445,6 +464,28 @@ export type PlaytestOptions = {
   /** Cache key commit — prefer the scanned repo's HEAD, not this project's. */
   commitSha?: string;
 };
+
+export type RunStepShot = {
+  id: string;
+  action: string | null;
+  screenshot: string | null;
+};
+
+/** After a real run: GET /v1/runs/{id}?screenshots=base64 and collect step shots. */
+export async function fetchRunStepShots(runId: string): Promise<RunStepShot[]> {
+  const apiKey = process.env.TINYFISH_API_KEY;
+  if (!apiKey) throw new Error("Missing TINYFISH_API_KEY");
+  const run = await getJson(`${RUNS_URL}/${runId}?screenshots=base64`, apiKey);
+  const steps = Array.isArray(run.steps) ? run.steps : [];
+  return steps
+    .filter((s): s is Record<string, unknown> => !!s && typeof s === "object")
+    .map((s) => ({
+      id: String(s.id ?? ""),
+      action: typeof s.action === "string" ? s.action : null,
+      screenshot: typeof s.screenshot === "string" ? s.screenshot : null,
+    }))
+    .filter((s) => s.id);
+}
 
 export function extractFindings(result: unknown): {
   findings: { page: string; action: string; expected: string; actual: string }[];

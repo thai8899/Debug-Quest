@@ -7,6 +7,7 @@ import { findBugs, type RawBug } from "./gemini";
 import {
   DEFAULT_GOAL,
   extractFindings,
+  fetchRunStepShots,
   playtest,
   type PlaytestEvent,
 } from "./playtester";
@@ -56,6 +57,9 @@ async function runPlaytestPhase(scan: Scan, liveUrl: string, commitSha: string) 
   const onEvent = (event: PlaytestEvent) => {
     if (!acceptEvents || !scan.playtest) return;
     scan.playtest.events.push(toScanEvent(event));
+    if (event.type === "STARTED" && typeof event.run_id === "string") {
+      scan.playtest.runId = event.run_id;
+    }
     if (event.type === "STREAMING_URL" && typeof event.streaming_url === "string") {
       scan.playtest.streamingUrl = event.streaming_url;
       console.log("[playtest] STREAMING_URL", event.streaming_url);
@@ -101,6 +105,34 @@ async function runPlaytestPhase(scan: Scan, liveUrl: string, commitSha: string) 
       scan.playtest.status = "done";
       console.log(`[playtest] done with ${findings.length} finding(s)`);
     }
+
+    // Real runs only: pull step screenshots for the UI replay (mock skips this).
+    if (
+      process.env.MOCK_TINYFISH !== "true" &&
+      scan.playtest.runId &&
+      (scan.playtest.status === "done" || scan.playtest.status === "partial")
+    ) {
+      try {
+        const shots = await fetchRunStepShots(scan.playtest.runId);
+        const purposes = scan.playtest.events
+          .filter((e) => e.type === "PROGRESS")
+          .map((e) => e.purpose || "");
+        scan.playtest.steps = shots
+          .map((s, i) => ({
+            stepId: s.id,
+            purpose: purposes[i] || s.action || `Step ${i + 1}`,
+            imageSrc: s.screenshot || "",
+          }))
+          .filter((s) => s.imageSrc);
+        console.log(`[playtest] saved ${scan.playtest.steps.length} step screenshot(s)`);
+      } catch (e) {
+        console.warn(
+          "[playtest] screenshot fetch failed (scan continues):",
+          e instanceof Error ? e.message : e,
+        );
+      }
+    }
+
     await saveScan(scan);
   } catch (e) {
     acceptEvents = false;

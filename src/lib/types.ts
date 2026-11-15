@@ -30,6 +30,13 @@ export type ScanPlaytestEvent = {
   error?: unknown;
 };
 
+export type PlaytestStepShot = {
+  stepId: string;
+  purpose: string;
+  /** data:image/... URI or absolute URL */
+  imageSrc: string;
+};
+
 export type ScanPlaytest = {
   status: "running" | "done" | "partial" | "skipped" | "error";
   events: ScanPlaytestEvent[];
@@ -37,6 +44,9 @@ export type ScanPlaytest = {
   notes?: string;
   reason?: string;
   streamingUrl?: string;
+  runId?: string;
+  /** Step screenshots for replay (real runs only; omitted in mock). */
+  steps?: PlaytestStepShot[];
 };
 
 export type TestFailure = {
