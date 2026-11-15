@@ -9,7 +9,7 @@ export async function POST(req: Request, { params }: { params: Promise<{ bugId: 
   if (!bug || !level) return NextResponse.json({ error: "not found" }, { status: 404 });
   const { token, spawn } = await req.json().catch(() => ({}));
   const t = readToken(token, bug.id);
-  const sp = t && schedule(level, t.seed).find((s) => s.id === spawn);
+  const sp = t && schedule(level, t.seed, t.mode).find((s) => s.id === spawn);
   if (!t || !sp) return NextResponse.json({ error: "bad round" }, { status: 400 });
   if (!inWindow(sp, t.startMs)) return NextResponse.json({ error: "too early or too late" }, { status: 400 });
   return NextResponse.json({ bug: sp.bug });

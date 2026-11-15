@@ -11,7 +11,7 @@ export async function POST(req: Request, { params }: { params: Promise<{ bugId: 
   const { token, whacks, secondsToSolve } = await req.json().catch(() => ({}));
   const t = readToken(token, bug.id);
   if (!t) return NextResponse.json({ error: "bad round" }, { status: 400 });
-  const out = grade(level, schedule(level, t.seed), whacks, t.startMs);
+  const out = grade(level, schedule(level, t.seed, t.mode), whacks, t.startMs);
   if ("error" in out) return NextResponse.json(out, { status: 400 });
   const { result } = out;
 

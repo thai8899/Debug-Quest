@@ -8,6 +8,10 @@ export const LIVES = 3;
 export const HOLES = 9;
 const SECRET = process.env.GAME_SECRET || "dq-local-dev-secret";
 
+export type Mode = "chomp" | "rain" | "hunt" | "pop";
+export const MODE_IDS: Mode[] = ["chomp", "rain", "hunt", "pop"];
+export const isMode = (m: unknown): m is Mode => MODE_IDS.includes(m as Mode);
+// hole: chomp = hole 0-8, rain = lane 0-2, hunt = unused, pop = tile 0-11
 export type Spawn = { id: number; hole: number; at: number; show: number; stationId: string; bug: boolean };
 
 function rng(seed: number) {
@@ -20,26 +24,50 @@ function rng(seed: number) {
   };
 }
 
-export function schedule(level: Level, seed: number): Spawn[] {
+// Keep the number of bug spawns inside [lo, hi] so every seed is a fair round.
+function flags(r: () => number, n: number, p: number, lo: number, hi: number) {
+  const f = Array.from({ length: n }, () => r() < p);
+  const count = () => f.filter(Boolean).length;
+  while (count() < lo) f[Math.floor(r() * n)] = true;
+  while (count() > hi) f[Math.floor(r() * n)] = false;
+  return f;
+}
+
+export function schedule(level: Level, seed: number, mode: Mode = "chomp"): Spawn[] {
   const r = rng(seed);
   const bugs = level.stations.filter((s) => s.hazard);
   const fine = level.stations.filter((s) => !s.hazard);
-  const n = 20;
-  const flags = Array.from({ length: n }, () => r() < 0.42);
-  const count = () => flags.filter(Boolean).length;
-  while (count() < 7) flags[Math.floor(r() * n)] = true;
-  while (count() > 10) flags[Math.floor(r() * n)] = false;
-
-  const out: Spawn[] = [];
-  flags.forEach((bug, i) => {
-    const at = Math.round(600 + i * 1400 + r() * 250);
-    const show = Math.max(2800, Math.round(3900 - i * 40 + r() * 200));
-    const busy = new Set(out.filter((o) => o.at + o.show + 300 > at).map((o) => o.hole));
-    const free = Array.from({ length: HOLES }, (_, h) => h).filter((h) => !busy.has(h) && h !== out[i - 1]?.hole);
-    const hole = free[Math.floor(r() * free.length)] ?? Math.floor(r() * HOLES);
+  const pick = (bug: boolean) => {
     const pool = bug ? bugs : fine;
-    const st = pool[Math.floor(r() * pool.length)] ?? level.stations[0];
-    out.push({ id: i, hole, at, show, stationId: st.id, bug });
+    return (pool[Math.floor(r() * pool.length)] ?? level.stations[0]).id;
+  };
+  const out: Spawn[] = [];
+
+  if (mode === "pop") {
+    // 4 rounds, each a 12-tile board with 3-5 buggy tiles
+    for (let round = 0; round < 4; round++) {
+      const f = flags(r, 12, 0.34, 3, 5);
+      f.forEach((bug, tile) => out.push({ id: out.length, hole: tile, at: 300 + round * 7000, show: 6500, stationId: pick(bug), bug }));
+    }
+    return out;
+  }
+
+  const cfg = mode === "rain" ? { n: 22, gap: 1200, lanes: 3, p: 0.42, lo: 7, hi: 11 }
+    : mode === "hunt" ? { n: 16, gap: 1600, lanes: 1, p: 0.45, lo: 6, hi: 9 }
+    : { n: 20, gap: 1400, lanes: HOLES, p: 0.42, lo: 7, hi: 10 };
+  flags(r, cfg.n, cfg.p, cfg.lo, cfg.hi).forEach((bug, i) => {
+    const at = Math.round((mode === "hunt" ? 500 : 600) + i * cfg.gap + r() * 250);
+    const show = mode === "rain" ? Math.max(2600, Math.round(3800 - i * 30 + r() * 150))
+      : mode === "hunt" ? Math.max(3600, Math.round(5200 - i * 60 + r() * 200))
+      : Math.max(2800, Math.round(3900 - i * 40 + r() * 200));
+    const cut = Math.max(1500, Math.min(show, DURATION - at - 200));
+    let hole = 0;
+    if (mode === "chomp") {
+      const busy = new Set(out.filter((o) => o.at + o.show + 300 > at).map((o) => o.hole));
+      const free = Array.from({ length: HOLES }, (_, h) => h).filter((h) => !busy.has(h) && h !== out[i - 1]?.hole);
+      hole = free[Math.floor(r() * free.length)] ?? Math.floor(r() * HOLES);
+    } else if (mode === "rain") hole = Math.floor(r() * cfg.lanes);
+    out.push({ id: i, hole, at, show: cut, stationId: pick(bug), bug });
   });
   return out;
 }
@@ -52,18 +80,18 @@ export function publicSpawns(level: Level, spawns: Spawn[]): PublicSpawn[] {
 }
 
 const sign = (p: string) => createHmac("sha256", SECRET).update(p).digest("hex").slice(0, 24);
-export const makeToken = (bugId: string, seed: number, startMs: number) => {
-  const p = `${bugId}|${seed}|${startMs}`;
+export const makeToken = (bugId: string, seed: number, startMs: number, mode: Mode = "chomp") => {
+  const p = `${bugId}|${seed}|${startMs}|${mode}`;
   return `${Buffer.from(p).toString("base64url")}.${sign(p)}`;
 };
-export function readToken(token: unknown, bugId: string): { seed: number; startMs: number } | null {
+export function readToken(token: unknown, bugId: string): { seed: number; startMs: number; mode: Mode } | null {
   if (typeof token !== "string") return null;
   const [b, s] = token.split(".");
   if (!b || !s) return null;
   const p = Buffer.from(b, "base64url").toString();
   if (sign(p) !== s) return null;
-  const [id, seed, startMs] = p.split("|");
-  return id === bugId ? { seed: Number(seed), startMs: Number(startMs) } : null;
+  const [id, seed, startMs, mode] = p.split("|");
+  return id === bugId && isMode(mode) ? { seed: Number(seed), startMs: Number(startMs), mode } : null;
 }
 
 const SLACK = 900;

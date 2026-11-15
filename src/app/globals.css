@@ -123,3 +123,11 @@ body {
 .chomp-ghost { height: calc(var(--cell) - 24px); }
 @media (min-width: 640px) and (min-height: 860px) { .chomp-code { font-size: 14px; } }
 @media (min-width: 640px) and (max-height: 859px) { .chomp-code { font-size: 12px; } }
+
+/* ---- coding backdrop ---- */
+.glyph-spin { transform-style: preserve-3d; animation: glyphspin 16s ease-in-out infinite; }
+.glyph-spin > span { backface-visibility: visible; }
+@keyframes glyphspin { 0% { transform: rotateY(-38deg) rotateX(-8deg); } 50% { transform: rotateY(38deg) rotateX(6deg); } 100% { transform: rotateY(-38deg) rotateX(-8deg); } }
+.codewin { transform-style: preserve-3d; color: #e6ecff; background: linear-gradient(160deg, rgba(34,48,130,.92), rgba(18,26,82,.94)); border: 1px solid rgba(255,255,255,.28); border-radius: 10px; overflow: hidden;
+  box-shadow: 0 1px 0 #0f1a5c, 0 2px 0 #0f1a5c, 0 3px 0 #0f1a5c, 0 4px 0 #0f1a5c, 0 5px 0 #0f1a5c, 0 6px 0 #0f1a5c, 0 30px 50px rgba(3,8,40,.55), 0 0 40px rgba(124,183,255,.25); opacity: .9; }
+@media (prefers-reduced-motion: reduce) { .glyph-spin { animation: none; transform: rotateY(-18deg); } }

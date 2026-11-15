@@ -50,16 +50,52 @@ function Ghost({ side }: { side: "l" | "r" }) {
   );
 }
 
-function Cube({ size, color, className }: { size: number; color: string; className: string }) {
-  const h = size / 2;
-  const faces = [`rotateY(0deg) translateZ(${h}px)`, `rotateY(90deg) translateZ(${h}px)`, `rotateY(180deg) translateZ(${h}px)`, `rotateY(-90deg) translateZ(${h}px)`, `rotateX(90deg) translateZ(${h}px)`, `rotateX(-90deg) translateZ(${h}px)`];
+// Real 3D extruded glyph: stacked copies pushed back in Z, spinning slowly.
+function Glyph3D({ text, size, color, deep, className, delay = 0 }: { text: string; size: number; color: string; deep: string; className: string; delay?: number }) {
+  const layers = Array.from({ length: 9 }, (_, i) => i);
   return (
-    <div className={`absolute ${className}`} style={{ width: size, height: size }}>
-      <div className="bob h-full w-full"><div className="cube-scene h-full w-full"><div className="cube h-full w-full">
-        {faces.map((t, i) => (
-          <i key={i} style={{ transform: t, background: `linear-gradient(135deg, ${color}55, ${color}1a)`, border: `1.5px solid ${color}`, boxShadow: `inset 0 0 ${size / 3}px ${color}66, 0 0 18px ${color}44` }} />
+    <div className={`absolute ${className}`} style={{ width: size * text.length * 0.62, height: size }}>
+      <div className="bob h-full w-full" style={{ animationDelay: `${delay}s` }}><div className="cube-scene h-full w-full"><div className="glyph-spin h-full w-full" style={{ animationDelay: `${delay}s` }}>
+        {layers.map((i) => (
+          <span key={i} className="absolute inset-0 flex items-center justify-center font-mono font-bold leading-none"
+            style={{ fontSize: size, transform: `translateZ(${-i * 3 + 12}px)`, color: i === 0 ? color : deep, opacity: i === 0 ? 0.95 : 0.9, textShadow: i === 0 ? `0 0 26px ${color}88` : "none" }}>{text}</span>
         ))}
       </div></div></div>
+    </div>
+  );
+}
+
+const T = { k: "#c792ff", f: "#7cb7ff", s: "#8ee36a", n: "#ffb347", c: "#8fa0cf", p: "#e6ecff" };
+type Tok = [keyof typeof T, string];
+const SNIPPET: { bug?: boolean; toks: Tok[] }[] = [
+  { toks: [["k", "function "], ["f", "getPage"], ["p", "(todos, page) {"]] },
+  { toks: [["c", "  // pages start at 1"]] },
+  { bug: true, toks: [["k", "  const "], ["p", "start = page * "], ["n", "10"], ["p", ";"]] },
+  { toks: [["k", "  return "], ["p", "todos."], ["f", "slice"], ["p", "(start, start + "], ["n", "10"], ["p", ");"]] },
+  { toks: [["p", "}"]] },
+  { toks: [["k", "const "], ["p", "ok = "], ["s", "\"fixed\""], ["p", ";"]] },
+];
+
+// A floating, tilted editor window with one flagged line. Sits at the edges, never behind content.
+function CodeWindow({ w, className, tilt, delay = 0 }: { w: number; className: string; tilt: string; delay?: number }) {
+  const fs = Math.round(w / 21);
+  return (
+    <div className={`absolute ${className}`} style={{ width: w }}>
+      <div className="bob" style={{ animationDelay: `${delay}s` }}><div className="cube-scene">
+        <div className="codewin" style={{ transform: tilt, fontSize: fs }}>
+          <div className="flex items-center gap-1.5 px-3 py-2" style={{ background: "rgba(255,255,255,.08)" }}>
+            <i className="h-2 w-2 rounded-full" style={{ background: "#ff6b4a" }} /><i className="h-2 w-2 rounded-full" style={{ background: "#ffc94d" }} /><i className="h-2 w-2 rounded-full" style={{ background: "#38e8c6" }} />
+            <span className="ml-2 font-mono opacity-60" style={{ fontSize: fs * 0.9 }}>todos.ts</span>
+          </div>
+          <pre className="m-0 px-3 py-2 font-mono leading-[1.7]" style={{ whiteSpace: "pre" }}>
+            {SNIPPET.map((l, i) => (
+              <div key={i} style={l.bug ? { background: "rgba(255,107,74,.28)", boxShadow: "inset 3px 0 0 #ff6b4a", margin: "0 -12px", padding: "0 12px" } : undefined}>
+                {l.toks.map(([k, t], j) => <span key={j} style={{ color: T[k] }}>{t}</span>)}
+              </div>
+            ))}
+          </pre>
+        </div>
+      </div></div>
     </div>
   );
 }
@@ -98,11 +134,13 @@ export default function Backdrop() {
           <circle key={r} r={r} stroke="#4FD1C5" strokeOpacity={0.12 - i * 0.015} strokeWidth=".35" strokeDasharray={i % 2 ? undefined : "1.2 2.4"} />
         ))}
       </svg>
-      <Cube size={92} color="#38E8C6" className="left-[2.5%] top-[64%] hidden md:block" />
-      <Cube size={118} color="#B79BFF" className="right-[3.5%] top-[56%] hidden md:block" />
-      <Cube size={58} color="#FFC94D" className="left-[46%] top-[2%] hidden md:block" />
-      <Cube size={74} color="#FF7ABE" className="bottom-[7%] right-[27%]" />
-      <Cube size={50} color="#7CB7FF" className="bottom-[22%] left-[9%]" />
+      <CodeWindow w={300} tilt="rotateY(24deg) rotateX(7deg) rotateZ(-2deg)" className="left-[1.5%] top-[60%] hidden lg:block" />
+      <CodeWindow w={250} tilt="rotateY(-26deg) rotateX(6deg) rotateZ(2deg)" className="right-[2%] top-[54%] hidden lg:block" delay={2} />
+      <Glyph3D text="{ }" size={84} color="#ffc94d" deep="#9a6a10" className="left-[6%] top-[36%] hidden md:block" />
+      <Glyph3D text="</>" size={70} color="#38e8c6" deep="#0d7a6b" className="right-[7%] top-[30%] hidden md:block" delay={1.5} />
+      <Glyph3D text="=>" size={64} color="#ff7abe" deep="#992b66" className="left-[44%] top-[2%] hidden md:block" delay={3} />
+      <Glyph3D text=";" size={90} color="#b79bff" deep="#5a3fb0" className="bottom-[6%] right-[26%]" delay={1} />
+      <Glyph3D text=">_" size={60} color="#7cb7ff" deep="#2f5fa8" className="left-[19%] top-[17%] hidden md:block" delay={2.5} />
       <div className="grid-floor absolute inset-x-[-30%] bottom-0 h-[55vh]" />
       <div className="scanline absolute inset-x-0 top-0 h-px bg-linear-to-r from-transparent via-accent/50 to-transparent" />
       <div className="grain absolute inset-0" />
