@@ -184,9 +184,9 @@ export default function PlayPage() {
       {back}
       {(phase === "intro" || phase === "loading") && (
         <div className="slab mx-auto flex w-full max-w-xl flex-col items-center gap-4 rounded-lg border border-line bg-panel p-6 text-center">
-          <Chomper size={84} />
+          <Chomper size={96} />
           <h1 className="font-display text-3xl font-bold">Bug Chomp</h1>
-          <p className="max-w-md text-[#ede8dc]/90">Something is wrong in <span className="font-mono text-accent">{meta.file}</span>: {meta.symptom}</p>
+          <p className="max-w-md text-lg text-[#ede8dc]/90">Something is wrong in <span className="font-mono text-accent">{meta.file}</span>: <span className="font-semibold text-white">{meta.symptom}</span></p>
           <ul className="flex w-full max-w-sm flex-col gap-1.5 text-left text-sm text-[#ede8dc]/85">
             <li>Ghosts pop out of the holes, each carrying one line of code.</li>
             <li>Tap the ones carrying the <span className="text-sev-high">buggy line</span> before they hide.</li>
@@ -207,7 +207,10 @@ export default function PlayPage() {
             <button onClick={() => setSound(!sound)} aria-label={sound ? "Mute" : "Unmute"} className="text-[#ede8dc]/60 hover:text-accent">{sound ? <Volume2 size={20} /> : <VolumeX size={20} />}</button>
           </div>
           <div className="h-2 overflow-hidden rounded-full bg-black/30"><div className="h-full rounded-full bg-gradient-to-r from-ok to-accent" style={{ width: `${pct}%` }} /></div>
-          <p className="text-center text-sm text-[#ede8dc]/80"><span className="text-sev-high">Find the line that causes:</span> {meta.symptom}</p>
+          <div className="rounded-md border border-sev-high/50 bg-[#2a1250]/70 px-4 py-3 text-center">
+            <div className="font-display text-sm font-semibold text-sev-high">Find the line that causes this</div>
+            <p className="mt-1 font-display text-xl font-semibold leading-snug text-white sm:text-2xl">{meta.symptom}</p>
+          </div>
 
           <div key={shake} className={`relative grid grid-cols-3 gap-x-3 gap-y-5 rounded-lg border border-line bg-black/20 p-3 pt-6 ${shake ? "shake" : ""}`}>
             {countdown > 0 && (
@@ -220,17 +223,17 @@ export default function PlayPage() {
               const eaten = chomps.find((x) => x.hole === h);
               const col = COLORS[(sp?.id ?? 0) % COLORS.length];
               return (
-                <div key={h} className="relative h-[128px] sm:h-[150px]">
+                <div key={h} className="relative h-[136px] sm:h-[176px]">
                   <div className="hole-back absolute bottom-1 left-0 right-0 h-10 rounded-[50%]" />
                   <div className="absolute inset-x-0 top-0 bottom-5 overflow-hidden">
                     <AnimatePresence>
                       {sp && (
                         <motion.button key={sp.id} type="button" aria-label={`Hole ${h + 1}: ${sp.code}`} onClick={() => chomp(sp)}
                           initial={{ y: "105%" }} animate={{ y: 0 }} exit={{ y: "105%" }} transition={{ type: "spring", stiffness: 420, damping: 26 }}
-                          className="ghost3d absolute inset-x-1 bottom-0 flex h-[104px] cursor-pointer flex-col items-center gap-1 rounded-t-[44px] rounded-b-md px-2 pt-3 text-left sm:h-[122px]"
+                          className="ghost3d absolute inset-x-1 bottom-0 flex h-[116px] cursor-pointer flex-col items-center gap-1 rounded-t-[44px] rounded-b-md px-2 pt-3 text-left sm:h-[150px]"
                           style={{ background: `linear-gradient(180deg, ${col}, ${col}dd)`, ["--g" as string]: col }}>
                           <span className="flex gap-2" aria-hidden>{[0, 1].map((i) => <span key={i} className="flex h-4 w-3.5 items-end justify-center rounded-full bg-white"><span className="mb-0.5 h-2 w-2 rounded-full bg-[#1b1f4d]" /></span>)}</span>
-                          <span className="w-full min-w-0 [overflow-wrap:anywhere] rounded-sm bg-[#0e1445]/80 px-1.5 py-1 font-mono text-[10px] leading-snug text-[#f4f1e4] sm:text-[11.5px]" style={{ display: "-webkit-box", WebkitLineClamp: 4, WebkitBoxOrient: "vertical", overflow: "hidden" }}>{sp.code}</span>
+                          <span className="w-full min-w-0 [overflow-wrap:anywhere] rounded-sm bg-[#0e1445]/80 px-1.5 py-1 font-mono text-[11px] font-semibold leading-tight text-[#f4f1e4] sm:text-[14px]" style={{ display: "-webkit-box", WebkitLineClamp: 5, WebkitBoxOrient: "vertical", overflow: "hidden" }}>{sp.code}</span>
                         </motion.button>
                       )}
                     </AnimatePresence>

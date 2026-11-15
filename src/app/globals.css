@@ -116,3 +116,6 @@ body {
 @keyframes shakeit { 0%,100% { transform: translateX(0); } 25% { transform: translateX(-7px); } 75% { transform: translateX(7px); } }
 .shake { animation: shakeit .3s ease; }
 @media (prefers-reduced-motion: reduce) { .chomper { animation: none; } .shake { animation: none; } }
+.lion-mouth { transform-box: fill-box; transform-origin: 50% 0%; animation: lionchomp .3s ease-in-out infinite alternate; }
+@keyframes lionchomp { from { transform: scaleY(.25); } to { transform: scaleY(1); } }
+@media (prefers-reduced-motion: reduce) { .lion-mouth { animation: none; } }

@@ -24,16 +24,16 @@ export function schedule(level: Level, seed: number): Spawn[] {
   const r = rng(seed);
   const bugs = level.stations.filter((s) => s.hazard);
   const fine = level.stations.filter((s) => !s.hazard);
-  const n = 24;
+  const n = 20;
   const flags = Array.from({ length: n }, () => r() < 0.42);
   const count = () => flags.filter(Boolean).length;
-  while (count() < 8) flags[Math.floor(r() * n)] = true;
-  while (count() > 12) flags[Math.floor(r() * n)] = false;
+  while (count() < 7) flags[Math.floor(r() * n)] = true;
+  while (count() > 10) flags[Math.floor(r() * n)] = false;
 
   const out: Spawn[] = [];
   flags.forEach((bug, i) => {
-    const at = Math.round(600 + i * 1150 + r() * 250);
-    const show = Math.max(1400, Math.round(2400 - i * 35 + r() * 200));
+    const at = Math.round(600 + i * 1400 + r() * 250);
+    const show = Math.max(2800, Math.round(3900 - i * 40 + r() * 200));
     const busy = new Set(out.filter((o) => o.at + o.show + 300 > at).map((o) => o.hole));
     const free = Array.from({ length: HOLES }, (_, h) => h).filter((h) => !busy.has(h) && h !== out[i - 1]?.hole);
     const hole = free[Math.floor(r() * free.length)] ?? Math.floor(r() * HOLES);
