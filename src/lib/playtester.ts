@@ -441,14 +441,15 @@ async function realPlaytest(
     if (!state.complete && !state.runId) throw err;
   }
 
-  let complete = state.complete;
+  let complete = state.complete as (PlaytestEvent & { type: "COMPLETE" }) | undefined;
   if (!complete) {
     if (!state.runId) {
       if (events.length) saveFixture(events);
       throw new Error("SSE ended before STARTED/COMPLETE and no run_id to poll");
     }
-    complete = await pollRun(state.runId, apiKey, onEvent, events);
+    complete = (await pollRun(state.runId, apiKey, onEvent, events)) as PlaytestEvent & { type: "COMPLETE" };
   }
+  if (!complete) throw new Error("playtest produced no COMPLETE event");
 
   if (events.length) saveFixture(events);
 

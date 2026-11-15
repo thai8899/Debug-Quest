@@ -116,7 +116,7 @@ async function runPlaytestPhase(scan: Scan, liveUrl: string, commitSha: string) 
     if (
       process.env.MOCK_TINYFISH !== "true" &&
       scan.playtest.runId &&
-      (scan.playtest.status === "done" || scan.playtest.status === "partial")
+      ((scan.playtest.status as string) === "done" || (scan.playtest.status as string) === "partial")
     ) {
       try {
         const shots = await fetchRunStepShots(scan.playtest.runId);
