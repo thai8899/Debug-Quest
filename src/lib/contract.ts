@@ -17,6 +17,8 @@ export type Bug = {
   locked: boolean;
   // True when line numbers count from 1 inside the snippet (the real file could not be fetched).
   lineRelative?: boolean;
+  /** Index into scan.playtest.findings this bug explains, or null/undefined if unrelated. */
+  findingIndex?: number | null;
 };
 
 // What the API returns while a bug is locked: no fix, no explanations.

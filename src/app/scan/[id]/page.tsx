@@ -78,7 +78,9 @@ export default function ScanPage() {
       </div>
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
         {scan.playtest && <div className="sm:col-span-full"><PlaytesterPanel playtest={scan.playtest} /></div>}
-        {scan.bugs.map((b) => <LockedCard key={b.id} bug={b} />)}
+        {scan.bugs.map((b) => (
+          <LockedCard key={b.id} bug={b} playtestFindings={scan.playtest?.findings} />
+        ))}
       </div>
     </Shell>
   );
