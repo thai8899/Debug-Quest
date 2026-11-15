@@ -1,61 +1,82 @@
 import { NextResponse } from 'next/server';
-import { pool } from '@/lib/tiger'; // Export the pool from your tiger.ts
-
+import { pool } from '@/lib/tiger';
 
 export async function GET(request: Request) {
-  console.log("Checking DB URL:", process.env.TIGER_DATABASE_URL);
-    const { searchParams } = new URL(request.url);
+  const { searchParams } = new URL(request.url);
   const userId = searchParams.get('userId') || 'demo';
 
   try {
-    // 1. XP Total
-    const xpRes = await pool.query('SELECT COALESCE(SUM(xp), 0) as total FROM xp_events WHERE user_id = $1', [userId]);
+    // 1. XP Total + level
+    const xpRes = await pool.query(
+      'SELECT COALESCE(SUM(xp), 0) AS total FROM xp_events WHERE user_id = $1',
+      [userId]
+    );
     const xpTotal = parseInt(xpRes.rows[0].total, 10);
     const level = Math.floor(xpTotal / 200) + 1;
 
-    // 2. XP Series (Last 24 hours)
-    // xp_by_15min is a continuous aggregate keyed by (bucket, user_id, bug_category),
-    // so roll the per-category rows up into one xp_sum per bucket.
-    const seriesRes = await pool.query(`
-      SELECT bucket, SUM(xp) AS xp_sum
+    // 2. XP Series (last 24h) — roll per-category CAGG rows into one sum per bucket
+    const seriesRes = await pool.query(
+      `
+      SELECT bucket, SUM(xp)::FLOAT AS xp_sum
       FROM xp_by_15min
       WHERE user_id = $1 AND bucket >= NOW() - INTERVAL '24 hours'
       GROUP BY bucket
       ORDER BY bucket ASC
-    `, [userId]);
+    `,
+      [userId]
+    );
 
-    // 3. Pass Rate per Category
-    const passRateRes = await pool.query(`
-      SELECT bug_category, 
-             COUNT(*) FILTER (WHERE event = 'quiz_pass')::FLOAT / NULLIF(COUNT(*), 0) as pass_rate 
-      FROM xp_events 
+    // 3. Pass rate per bug_category
+    const passRateRes = await pool.query(
+      `
+      SELECT bug_category,
+             COUNT(*) FILTER (WHERE event = 'quiz_pass')::FLOAT
+               / NULLIF(COUNT(*), 0) AS pass_rate
+      FROM xp_events
       WHERE user_id = $1 AND event IN ('quiz_pass', 'quiz_fail')
       GROUP BY bug_category
-    `, [userId]);
+      ORDER BY bug_category
+    `,
+      [userId]
+    );
 
-  // 4. Weak Categories (Most fails in 7 days)
-    const weakRes = await pool.query(`
-      SELECT bug_category, COUNT(*) as fails 
-      FROM xp_events 
-      WHERE user_id = $1 AND event = 'quiz_fail' AND time >= NOW() - INTERVAL '7 days' 
-      GROUP BY bug_category 
-      ORDER BY fails DESC 
+    // 4. Weak categories — most quiz_fail events in the last 7 days
+    const weakRes = await pool.query(
+      `
+      SELECT bug_category, COUNT(*) AS fails
+      FROM xp_events
+      WHERE user_id = $1
+        AND event = 'quiz_fail'
+        AND time >= NOW() - INTERVAL '7 days'
+      GROUP BY bug_category
+      ORDER BY fails DESC
       LIMIT 3
-    `, [userId]);
+    `,
+      [userId]
+    );
 
-    // 5. Tests Fixed (Global or linked to user)
-    const testsRes = await pool.query(`
-      SELECT COALESCE(SUM(tests_failing_before - tests_failing_after), 0) as fixed 
+    // 5. Scan totals (bugs fixed + tests fixed)
+    const metricsRes = await pool.query(`
+      SELECT
+        COALESCE(SUM(bugs_found), 0) AS bugs_fixed,
+        COALESCE(SUM(tests_failing_before - tests_failing_after), 0) AS tests_fixed
       FROM scan_metrics
     `);
 
     return NextResponse.json({
       xpTotal,
       level,
-      xpSeries: seriesRes.rows,
-      passRate: passRateRes.rows,
-      weakCategories: weakRes.rows.map(r => r.bug_category),
-      testsFixedTotal: parseInt(testsRes.rows[0].fixed, 10)
+      xpSeries: seriesRes.rows.map((r) => ({
+        bucket: r.bucket,
+        xp_sum: Number(r.xp_sum) || 0,
+      })),
+      passRate: passRateRes.rows.map((r) => ({
+        bug_category: r.bug_category,
+        pass_rate: Number(r.pass_rate) || 0,
+      })),
+      weakCategories: weakRes.rows.map((r) => r.bug_category),
+      bugsFixedTotal: parseInt(metricsRes.rows[0].bugs_fixed, 10),
+      testsFixedTotal: parseInt(metricsRes.rows[0].tests_fixed, 10),
     });
   } catch (error) {
     console.error('Stats API Error:', error);
