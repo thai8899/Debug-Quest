@@ -35,6 +35,7 @@ export type RunResult =
 export type PublicSpawn = { id: number; hole: number; at: number; show: number; stationId: string; line: number; code: string };
 export type ArcadeMode = "chomp" | "rain" | "hunt" | "pop";
 export type ArcadeStart = { mode: ArcadeMode; token: string; durationMs: number; leadMs: number; lives: number; goal: number; spawns: PublicSpawn[] };
+export type ReviewItem = { line: number; why: string; guard?: string; guardDesc?: string };
 export type ArcadeResult =
-  | { passed: true; stars: number; xpEarned: number; caught: number; total: number; wrong: number; review: { line: number; why: string }[] }
+  | { passed: true; stars: number; xpEarned: number; caught: number; total: number; wrong: number; review: ReviewItem[] }
   | { passed: false; caught: number; total: number; wrong: number; outOfLives: boolean; crash: string; hint?: string; fails: number };

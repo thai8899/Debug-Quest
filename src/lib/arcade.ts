@@ -1,5 +1,5 @@
 import { createHmac } from "crypto";
-import type { Level, ArcadeResult, PublicSpawn } from "./levelTypes";
+import { GUARD_CATALOG, type Level, type ArcadeResult, type PublicSpawn, type ReviewItem } from "./levelTypes";
 
 // Bug Chomp. The server owns the schedule and the answers: the browser only sees code lines and sends taps.
 export const DURATION = 30_000;
@@ -104,6 +104,14 @@ export const inWindow = (sp: Spawn, startMs: number, now = Date.now()) => {
 const g = globalThis as unknown as { __dqArcadeFails?: Map<string, number> };
 const fails = (g.__dqArcadeFails ??= new Map<string, number>());
 
+// After this many failed rounds on one bug the player may open the tutorial instead of winning.
+export const TUTORIAL_AFTER = 5;
+export const failCount = (bugId: string) => fails.get(bugId) ?? 0;
+
+// What the tutorial teaches about the buggy line(s). Only sent after a win or an unlocked tutorial.
+export const reviewOf = (level: Level): ReviewItem[] =>
+  level.stations.filter((s) => s.hazard).map((s) => ({ line: s.line, why: s.hazard!.why, guard: GUARD_CATALOG[s.hazard!.guard].name, guardDesc: GUARD_CATALOG[s.hazard!.guard].desc }));
+
 export function grade(level: Level, spawns: Spawn[], whacked: unknown, startMs: number, now = Date.now()): { error: string } | { result: ArcadeResult } {
   const ids = Array.isArray(whacked) ? [...new Set(whacked.filter((x): x is number => Number.isInteger(x)))] : [];
   const byId = new Map(spawns.map((s) => [s.id, s]));
@@ -124,5 +132,5 @@ export function grade(level: Level, spawns: Spawn[], whacked: unknown, startMs: 
   fails.delete(level.bugId);
   const stars = Math.max(1, 3 - (caught < total ? 1 : 0) - (wrong > 0 ? 1 : 0));
   return { result: { passed: true, stars, xpEarned: 30 + 20 * stars, caught, total, wrong,
-    review: level.stations.filter((s) => s.hazard).map((s) => ({ line: s.line, why: s.hazard!.why })) } };
+    review: reviewOf(level) } };
 }

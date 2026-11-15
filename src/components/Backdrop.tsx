@@ -134,8 +134,8 @@ export default function Backdrop() {
           <circle key={r} r={r} stroke="#4FD1C5" strokeOpacity={0.12 - i * 0.015} strokeWidth=".35" strokeDasharray={i % 2 ? undefined : "1.2 2.4"} />
         ))}
       </svg>
-      <CodeWindow w={300} tilt="rotateY(24deg) rotateX(7deg) rotateZ(-2deg)" className="left-[1.5%] top-[60%] hidden lg:block" />
-      <CodeWindow w={250} tilt="rotateY(-26deg) rotateX(6deg) rotateZ(2deg)" className="right-[2%] top-[54%] hidden lg:block" delay={2} />
+      <CodeWindow w={300} tilt="rotateY(24deg) rotateX(7deg) rotateZ(-2deg)" className="left-[1.5%] top-[60%] hidden 2xl:block" />
+      <CodeWindow w={250} tilt="rotateY(-26deg) rotateX(6deg) rotateZ(2deg)" className="right-[2%] top-[54%] hidden 2xl:block" delay={2} />
       <Glyph3D text="{ }" size={84} color="#ffc94d" deep="#9a6a10" className="left-[6%] top-[36%] hidden md:block" />
       <Glyph3D text="</>" size={70} color="#38e8c6" deep="#0d7a6b" className="right-[7%] top-[30%] hidden md:block" delay={1.5} />
       <Glyph3D text="=>" size={64} color="#ff7abe" deep="#992b66" className="left-[44%] top-[2%] hidden md:block" delay={3} />

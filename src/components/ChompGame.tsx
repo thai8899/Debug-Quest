@@ -3,16 +3,18 @@ import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
 import Link from "next/link";
 import { motion } from "framer-motion";
-import { ArrowDownToLine, ArrowLeft, Crosshair, Flame, Grid3x3, Hammer, Heart, Lightbulb, RotateCcw, Star, Volume2, VolumeX } from "lucide-react";
+import { ArrowDownToLine, ArrowLeft, BookOpen, Crosshair, Flame, Grid3x3, Hammer, Heart, Lightbulb, RotateCcw, Star, Volume2, VolumeX } from "lucide-react";
 import type { Bug } from "@/lib/contract";
-import type { ArcadeMode } from "@/lib/levelTypes";
+import type { ArcadeMode, ReviewItem } from "@/lib/levelTypes";
 import UnlockReveal from "@/components/UnlockReveal";
+import Tutorial from "@/components/Tutorial";
 import Chomper from "@/components/Chomper";
 import Logo from "@/components/Logo";
 import { useRound } from "@/components/arcade/useRound";
 import { ChompBoard, HuntBoard, PopBoard, RainBoard } from "@/components/arcade/boards";
 
 type Meta = { bugId: string; scanId: string; file: string; symptom: string; unlocked: boolean; bug?: Bug };
+const TUTORIAL_AFTER = 5; // the server enforces the same number
 const btn = "btn3d inline-flex items-center justify-center gap-2 rounded-md px-6 py-3 font-display text-base font-bold text-[#2a1a00] disabled:opacity-40";
 
 const MODES: { id: ArcadeMode; name: string; blurb: string; how: string; Icon: typeof Hammer; color: string }[] = [
@@ -26,7 +28,20 @@ export default function ChompGame() {
   const { bugId } = useParams<{ bugId: string }>();
   const [meta, setMeta] = useState<Meta | null>(null);
   const [loadError, setLoadError] = useState("");
+  const [studied, setStudied] = useState<{ bug: Bug; review: ReviewItem[] } | null>(null);
+  const [tutBusy, setTutBusy] = useState(false);
+  const [tutError, setTutError] = useState("");
   const R = useRound(bugId);
+
+  async function openTutorial() {
+    setTutBusy(true); setTutError("");
+    try {
+      const r = await fetch(`/api/game/${bugId}/tutorial`, { method: "POST" });
+      if (!r.ok) throw new Error();
+      setStudied(await r.json());
+    } catch { setTutError("Could not open the tutorial. Try again."); }
+    setTutBusy(false);
+  }
 
   useEffect(() => {
     fetch(`/api/game/${bugId}`).then(async (r) => {
@@ -42,7 +57,7 @@ export default function ChompGame() {
   const { phase, round, win, fail, elapsed } = R;
   const cur = MODES.find((m) => m.id === R.mode)!;
   const back = <Link href={`/scan/${meta.scanId}`} className="inline-flex w-fit items-center gap-2 text-sm text-[#ede8dc]/70 hover:text-accent"><ArrowLeft size={16} /> Back to results</Link>;
-  const reveal = win ? { bug: win.bug, xp: win.xpEarned } : meta.unlocked && meta.bug && phase === "intro" && !R.error ? { bug: meta.bug, xp: 0 } : null;
+  const reveal = win ? { bug: win.bug, xp: win.xpEarned } : studied ? { bug: studied.bug, xp: 0 } : meta.unlocked && meta.bug && phase === "intro" && !R.error ? { bug: meta.bug, xp: 0 } : null;
 
   if (reveal) return (
     <Shell>
@@ -54,13 +69,9 @@ export default function ChompGame() {
         </div>
       )}
       <UnlockReveal bug={reveal.bug} xp={reveal.xp} />
-      {win && (
-        <div className="rounded-md border border-line bg-panel p-4">
-          <h3 className="mb-2 font-display text-lg font-semibold">The buggy line</h3>
-          <ul className="flex flex-col gap-2 text-[#ede8dc]/85">{win.review.map((r) => <li key={r.line}><span className="font-mono text-accent">line {r.line}</span> {r.why}</li>)}</ul>
-        </div>
-      )}
-      {meta.unlocked && !win && <button onClick={() => R.start()} className={`${btn} w-fit`}>Play again</button>}
+      {studied && <p className="rounded-md border border-line bg-black/20 p-3 text-sm text-[#ede8dc]/85">You opened the tutorial, so this fix is unlocked with no XP and no stars. Win a game on another bug to earn them.</p>}
+      <Tutorial bug={reveal.bug} symptom={meta.symptom} review={win?.review ?? studied?.review} />
+      {(meta.unlocked || studied) && !win && <button onClick={() => { setStudied(null); R.start(); }} className={`${btn} w-fit`}>Play again</button>}
     </Shell>
   );
 
@@ -130,11 +141,19 @@ export default function ChompGame() {
           <Chomper size={64} />
           <div className="font-display text-2xl font-bold">{fail.outOfLives ? "Out of hearts" : "Some bugs got away"}</div>
           <p className="text-[#ede8dc]/90">You caught {fail.caught} of {fail.total} bugs{fail.wrong ? ` and hit ${fail.wrong} good line${fail.wrong > 1 ? "s" : ""}` : ""}. Here is what the bug does: {fail.crash}</p>
+          <p className="font-mono text-xs text-[#ede8dc]/55">Try {Math.min(fail.fails, TUTORIAL_AFTER)} of {TUTORIAL_AFTER}{fail.fails < TUTORIAL_AFTER ? `. The tutorial opens after ${TUTORIAL_AFTER - fail.fails} more.` : ""}</p>
           {fail.hint && <p className="flex gap-2 text-sm text-sev-medium"><Lightbulb size={16} className="mt-0.5 shrink-0" /> {fail.hint}</p>}
           <div className="flex flex-wrap justify-center gap-3">
             <button onClick={() => R.start()} className={btn}><RotateCcw size={16} /> Play {cur.name} again</button>
             <button onClick={() => R.setPhase("intro")} className="rounded-md border border-line px-4 py-3 font-display text-sm font-semibold hover:border-accent">Pick another game</button>
           </div>
+          {fail.fails >= TUTORIAL_AFTER && (
+            <div className="mt-1 flex w-full flex-col items-center gap-2 rounded-md border border-accent/50 bg-black/20 p-3">
+              <p className="text-sm text-[#ede8dc]/90">Stuck? You can learn how this bug works instead. It unlocks the fix, but earns no XP and no stars.</p>
+              <button onClick={openTutorial} disabled={tutBusy} className="inline-flex items-center gap-2 rounded-md border border-accent px-4 py-2 font-display text-sm font-semibold text-accent hover:bg-accent/10 disabled:opacity-50"><BookOpen size={16} /> {tutBusy ? "Opening" : "Open the tutorial"}</button>
+              {tutError && <p role="alert" className="text-sm text-sev-high">{tutError}</p>}
+            </div>
+          )}
         </div>
       )}
     </Shell>
