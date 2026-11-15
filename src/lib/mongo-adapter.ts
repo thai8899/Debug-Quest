@@ -13,7 +13,7 @@ export function mongoEnabled() {
 type AnyDoc = Record<string, unknown>;
 const g = globalThis as unknown as { __dqMongo?: Promise<import("mongodb").Db> };
 
-async function db() {
+export async function getMongoDb() {
   g.__dqMongo ??= (async () => {
     const { MongoClient } = await import("mongodb");
     const client = new MongoClient(process.env.MONGODB_URI as string, { serverSelectionTimeoutMS: 6000 });
@@ -34,40 +34,40 @@ export function toDocBug(b: Bug): AnyDoc {
 }
 
 export async function mGetBug(id: string) {
-  const d = await (await db()).collection("bugs").findOne({ $or: [{ id }, { bugId: id }] });
+  const d = await (await getMongoDb()).collection("bugs").findOne({ $or: [{ id }, { bugId: id }] });
   return d ? fromDocBug(d as AnyDoc) : null;
 }
 export async function mGetBugsForScan(scanId: string) {
-  const ds = await (await db()).collection("bugs").find({ scanId }).toArray();
+  const ds = await (await getMongoDb()).collection("bugs").find({ scanId }).toArray();
   return ds.map((d) => fromDocBug(d as AnyDoc));
 }
 export async function mSaveBugs(bugs: Bug[]) {
-  const c = (await db()).collection("bugs");
+  const c = (await getMongoDb()).collection("bugs");
   for (const b of bugs) await c.replaceOne({ bugId: b.id }, toDocBug(b), { upsert: true });
 }
 export async function mUnlockBug(id: string) {
-  await (await db()).collection("bugs").updateOne(
+  await (await getMongoDb()).collection("bugs").updateOne(
     { $or: [{ id }, { bugId: id }] },
     { $set: { locked: false, unlocked: true, unlockedAt: new Date() } },
   );
 }
 export async function mGetQuiz(bugId: string) {
-  const d = await (await db()).collection("quizzes").findOne({ bugId });
+  const d = await (await getMongoDb()).collection("quizzes").findOne({ bugId });
   if (!d) return null;
   const { _id: _i, ...rest } = d as AnyDoc;
   void _i;
   return rest as unknown as Quiz;
 }
 export async function mSaveQuiz(q: Quiz) {
-  await (await db()).collection("quizzes").replaceOne({ bugId: q.bugId }, { ...q }, { upsert: true });
+  await (await getMongoDb()).collection("quizzes").replaceOne({ bugId: q.bugId }, { ...q }, { upsert: true });
 }
 export async function mGetLevel(bugId: string) {
-  const d = await (await db()).collection("levels").findOne({ bugId });
+  const d = await (await getMongoDb()).collection("levels").findOne({ bugId });
   if (!d) return null;
   const { _id: _i, ...rest } = d as AnyDoc;
   void _i;
   return rest as unknown as Level;
 }
 export async function mSaveLevel(l: Level) {
-  await (await db()).collection("levels").replaceOne({ bugId: l.bugId }, { ...l }, { upsert: true });
+  await (await getMongoDb()).collection("levels").replaceOne({ bugId: l.bugId }, { ...l }, { upsert: true });
 }
