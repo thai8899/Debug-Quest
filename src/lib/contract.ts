@@ -15,6 +15,8 @@ export type Bug = {
   explainDeep: string;
   sources: string[];
   locked: boolean;
+  // True when line numbers count from 1 inside the snippet (the real file could not be fetched).
+  lineRelative?: boolean;
 };
 
 // What the API returns while a bug is locked: no fix, no explanations.
@@ -32,6 +34,9 @@ export type Scan = {
   testsBefore?: TestCounts;
   testsAfter?: TestCounts;
   bugs: PublicBug[];
+  step?: string;
+  error?: string;
+  playtest?: import("./types").ScanPlaytest;
 };
 
 export type QuestionType = "spot-the-line" | "predict" | "pick-the-fix";
