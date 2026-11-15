@@ -23,14 +23,16 @@ function loadEnv(file: string) {
 
 loadEnv(".env");
 
-const GOAL =
-  "You are a QA tester. Add three to-dos, mark one complete, use the All / Active / Completed filters, edit a to-do, delete one, and try adding an empty to-do. Report anything that doesn't behave as expected.";
+const GOAL = "Add one to-do called 'test' and mark it complete.";
 
 async function main() {
   const result = await playtest(
     "https://todomvc.com/examples/react/dist/",
     GOAL,
     (event) => {
+      if (event.type === "STREAMING_URL" && event.streaming_url) {
+        console.log(event.streaming_url);
+      }
       console.log(`[${new Date().toISOString()}]`, event);
     },
   );
