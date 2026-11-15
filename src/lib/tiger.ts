@@ -1,30 +1,42 @@
 import { Pool } from 'pg';
 
-const rawUrl = process.env.TIGER_DATABASE_URL;
+// Lazy pool so imports don't crash when env isn't loaded yet (e.g. during build).
+let _pool: Pool | null = null;
 
-if (!rawUrl) {
-  throw new Error('Please add your TIGER_DATABASE_URL to .env.local');
+function getPool(): Pool {
+  if (_pool) return _pool;
+
+  const rawUrl = process.env.TIGER_DATABASE_URL;
+  if (!rawUrl) {
+    throw new Error('Please add your TIGER_DATABASE_URL to .env / .env.production');
+  }
+
+  // Managed providers (Timescale, etc.) often present a self-signed certificate.
+  // Strip sslmode so rejectUnauthorized: false takes effect.
+  const connectionString = (() => {
+    try {
+      const parsed = new URL(rawUrl);
+      parsed.searchParams.delete('sslmode');
+      return parsed.toString();
+    } catch {
+      return rawUrl;
+    }
+  })();
+
+  _pool = new Pool({
+    connectionString,
+    ssl: { rejectUnauthorized: false },
+  });
+  return _pool;
 }
 
-// Managed providers (Timescale, etc.) often present a self-signed certificate.
-// Newer versions of `pg` treat `sslmode=require` in the connection string as
-// `verify-full`, which overrides the `ssl` option below and rejects the cert.
-// Strip `sslmode` so our `rejectUnauthorized: false` setting takes effect.
-const connectionString = (() => {
-  try {
-    const parsed = new URL(rawUrl);
-    parsed.searchParams.delete('sslmode');
-    return parsed.toString();
-  } catch {
-    return rawUrl;
-  }
-})();
-
-export const pool = new Pool({
-  connectionString,
-  ssl: {
-    rejectUnauthorized: false // Required for most managed cloud databases
-  }
+/** Shared pool for stats / queries. */
+export const pool = new Proxy({} as Pool, {
+  get(_target, prop, receiver) {
+    const real = getPool() as unknown as Record<string | symbol, unknown>;
+    const value = Reflect.get(real, prop, receiver);
+    return typeof value === 'function' ? value.bind(real) : value;
+  },
 });
 
 interface XpEventParams {
@@ -42,13 +54,13 @@ export async function recordXpEvent(params: XpEventParams) {
     RETURNING *;
   `;
   const values = [
-    params.userId, 
-    params.event, 
-    params.bugCategory, 
-    params.xp, 
-    params.secondsToSolve
+    params.userId,
+    params.event,
+    params.bugCategory,
+    params.xp,
+    params.secondsToSolve,
   ];
-  const result = await pool.query(query, values);
+  const result = await getPool().query(query, values);
   return result.rows[0];
 }
 
@@ -66,11 +78,11 @@ export async function recordScanMetrics(params: ScanMetricsParams) {
     RETURNING *;
   `;
   const values = [
-    params.repoId, 
-    params.bugsFound, 
-    params.testsFailingBefore, 
-    params.testsFailingAfter
+    params.repoId,
+    params.bugsFound,
+    params.testsFailingBefore,
+    params.testsFailingAfter,
   ];
-  const result = await pool.query(query, values);
+  const result = await getPool().query(query, values);
   return result.rows[0];
 }
