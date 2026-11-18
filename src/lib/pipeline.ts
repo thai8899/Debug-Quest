@@ -12,6 +12,7 @@ import {
   type PlaytestEvent,
 } from "./playtester";
 import * as gh from "./github";
+import { sendScanAlert } from "./notify";
 
 const PLAYTEST_CLIENT_TIMEOUT_MS = 200_000;
 
@@ -267,6 +268,13 @@ async function runPipeline(scan: Scan) {
       scan.status = "done";
       scan.step = "Fix locked. Play to unlock.";
     }
+    // Phone (ntfy) + Discord. The helper swallows errors, so alerts never break a scan.
+    const appBase = (process.env.APP_URL || process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000").replace(/\/$/, "");
+    void sendScanAlert({
+      repoName: `${scan.owner}/${scan.repo}`,
+      bugCount: applied.length,
+      scanUrl: `${appBase}/scan/${scan.id}`,
+    });
   } catch (e) {
     scan.status = "error";
     const full = (e instanceof Error ? e.message : String(e)).replaceAll(process.env.GITHUB_TOKEN || "\0", "***");
